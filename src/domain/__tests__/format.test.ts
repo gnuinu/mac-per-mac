@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  LANDMARKS,
   formatCalories,
   formatCount,
   formatHeight,
   formatKoreanNumber,
   formatWon,
   formatWorkTime,
+  pickLandmark,
 } from '../format';
 
 describe('formatKoreanNumber', () => {
@@ -103,6 +105,57 @@ describe('formatHeight', () => {
   it('0이면 빈 상태 문구를 준다', () => {
     expect(formatHeight(0).value).toBe('0cm');
     expect(formatHeight(0).analogy).toBe('아직 아무것도 안 쌓았어요');
+  });
+});
+
+describe('pickLandmark', () => {
+  it.each([
+    [4.25, 'bigmac'],
+    [8.5, 'bigmac'],
+    [173, 'person'],
+    [600, 'giraffe'],
+    [2_000, 'apartment'],
+    [49_800, 'building63'],
+    [100_000, 'lotteTower'],
+    [500_000, 'hallasan'],
+    [2_000_000, 'everest'],
+    [8_000_000, 'stratosphere'],
+    [20_000_000, 'karman'],
+    [100_000_000, 'iss'],
+    [50_000_000_000, 'moon'],
+  ])('%dcm → %s', (cm, expected) => {
+    expect(pickLandmark(cm).landmark.id).toBe(expected);
+  });
+
+  it('사다리보다 낮으면 가장 작은 랜드마크와 1 미만의 비율을 준다', () => {
+    const { landmark, ratio } = pickLandmark(4.25);
+    expect(landmark.id).toBe('bigmac');
+    expect(ratio).toBeCloseTo(0.5, 10);
+  });
+
+  it('비율은 실제 높이 나누기 랜드마크 높이다', () => {
+    expect(pickLandmark(49_800).ratio).toBeCloseTo(2, 10);
+  });
+
+  it('0 이하는 비율 0으로 떨어진다', () => {
+    expect(pickLandmark(0).ratio).toBe(0);
+    expect(pickLandmark(Number.NaN).ratio).toBe(0);
+  });
+
+  it('사다리는 cm 오름차순이어야 한다 (탐색이 그 전제를 쓴다)', () => {
+    const heights = LANDMARKS.map((l) => l.cm);
+    expect([...heights].sort((a, b) => a - b)).toEqual(heights);
+  });
+
+  it('id가 중복되지 않는다', () => {
+    const ids = LANDMARKS.map((l) => l.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('formatHeight가 같은 비교 결과를 함께 돌려준다', () => {
+    const result = formatHeight(49_800);
+    expect(result.comparison.landmark.id).toBe('building63');
+    expect(result.analogy).toBe('63빌딩 2개 높이');
   });
 });
 

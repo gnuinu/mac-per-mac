@@ -9,6 +9,7 @@ import {
 } from '../domain/format';
 import type { BigMacResult } from '../domain/types';
 import type { PriceLookupResult } from '../services/priceLookup';
+import { HeightCompare } from './HeightCompare';
 import { MetricRow } from './MetricRow';
 import styles from './ResultPanel.module.css';
 
@@ -80,6 +81,13 @@ export function ResultPanel({
           {...(work.note ? { sub: work.note } : {})}
         />
       </div>
+
+      {/* 수치만으로는 감이 안 오므로 같은 비유를 실제 비율로 그려준다. */}
+      <HeightCompare
+        stackCm={result.stackHeightCm}
+        comparison={height.comparison}
+        burgerCount={result.count}
+      />
 
       <hr className={styles.rule} />
 

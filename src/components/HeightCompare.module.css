@@ -1,0 +1,96 @@
+.wrap {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/*
+ * 폭이 아니라 높이를 고정한다. 그림판 폭이 내용에 따라 달라지므로,
+ * 폭을 100%로 늘리면 케이스마다 픽셀 크기가 들쭉날쭉해진다.
+ */
+.canvas {
+  height: 112px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+  /* flex의 기본 stretch를 끄지 않으면 폭이 늘어나 그림이 가운데로 밀린다.
+     지표가 전부 왼쪽 정렬이라 그림도 왼쪽에 붙어야 읽는 흐름이 끊기지 않는다. */
+  align-self: flex-start;
+  color: var(--accent);
+  /* 픽셀 그림이므로 보간을 끈다. */
+  image-rendering: pixelated;
+}
+
+/* 세로 예산이 빠듯한 화면에서는 줄인다. */
+@media (max-width: 53.99rem) {
+  .canvas {
+    height: 72px;
+  }
+}
+
+@media (max-height: 46rem) {
+  .canvas {
+    height: 64px;
+  }
+}
+
+.ground {
+  fill: var(--rule);
+}
+
+/* 랜드마크는 한 톤 눌러서 빅맥 기둥이 주인공으로 남게 한다. */
+.stack {
+  opacity: 1;
+}
+
+.break {
+  fill: var(--surface);
+}
+
+.grow {
+  animation: grow 520ms var(--ease-out) both;
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0.04);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.swatch {
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+.swatchMuted {
+  opacity: 0.45;
+}
+
+.warn {
+  color: var(--muted);
+  opacity: 0.8;
+  font-style: italic;
+}

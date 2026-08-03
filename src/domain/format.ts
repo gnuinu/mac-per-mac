@@ -2,12 +2,49 @@
  * 숫자 포맷팅. 표시용 문자열만 만들고, 계산은 하지 않는다.
  */
 
+/**
+ * 비유에 쓰는 대상. UI가 그림을 그릴 수 있도록 문자열이 아니라 구조로 돌려준다.
+ * 도메인은 어떤 그림을 쓸지 모른다 — id만 주고, 스프라이트 선택은 UI 몫이다.
+ */
+export type LandmarkId =
+  | 'bigmac'
+  | 'person'
+  | 'giraffe'
+  | 'apartment'
+  | 'building63'
+  | 'lotteTower'
+  | 'hallasan'
+  | 'everest'
+  | 'stratosphere'
+  | 'karman'
+  | 'iss'
+  | 'moon';
+
+export interface Landmark {
+  id: LandmarkId;
+  name: string;
+  cm: number;
+  /** 개수를 셀 때 붙는 단위. "개" / "명" / "마리" */
+  counter: string;
+}
+
+export interface HeightComparison {
+  landmark: Landmark;
+  /** 쌓은 높이 ÷ 랜드마크 높이. */
+  ratio: number;
+}
+
 export interface FormattedHeight {
   /** 상황에 맞는 단위로 변환한 값. 예: "21.2m" */
   value: string;
   /** 비유 문자열. 예: "63빌딩 2.4개 높이" */
   analogy: string;
+  /** 같은 비유를 그림으로 그리기 위한 재료. */
+  comparison: HeightComparison;
 }
+
+/** 사람 키. 비교 그림에서 눈대중 기준으로 늘 함께 그린다. */
+export const PERSON_HEIGHT_CM = 173;
 
 export interface FormattedDuration {
   /** 예: "16일 4시간" */
@@ -86,13 +123,6 @@ function trim1(n: number): string {
   return fixed.endsWith('.0') ? withCommas(Number(fixed)) : fixed;
 }
 
-interface Landmark {
-  name: string;
-  cm: number;
-  /** 비유 문장에서 개수 세는 단위. */
-  counter: string;
-}
-
 /**
  * 비유 사다리. cm 오름차순으로 정렬되어 있어야 한다.
  *
@@ -100,34 +130,40 @@ interface Landmark {
  * 남산(262m)·백두산(2744m)처럼 바로 아래 항목과 1.5배도 차이 나지 않는 것은
  * 일부러 뺐다.
  */
-const LANDMARKS: Landmark[] = [
-  { name: '빅맥', cm: 8.5, counter: '개' },
-  { name: '성인 키', cm: 173, counter: '명' },
-  { name: '기린', cm: 550, counter: '마리' },
-  { name: '아파트 5층', cm: 1_500, counter: '채' },
-  { name: '63빌딩', cm: 24_900, counter: '개' },
-  { name: '롯데월드타워', cm: 55_500, counter: '개' },
-  { name: '한라산', cm: 194_700, counter: '개' },
-  { name: '에베레스트', cm: 884_800, counter: '개' },
-  { name: '성층권', cm: 5_000_000, counter: '개' },
-  { name: '카르만 선', cm: 10_000_000, counter: '개' },
-  { name: 'ISS 궤도', cm: 40_800_000, counter: '개' },
-  { name: '달까지 거리', cm: 38_440_000_000, counter: '개' },
+export const LANDMARKS: readonly Landmark[] = [
+  { id: 'bigmac', name: '빅맥', cm: 8.5, counter: '개' },
+  { id: 'person', name: '성인 키', cm: PERSON_HEIGHT_CM, counter: '명' },
+  { id: 'giraffe', name: '기린', cm: 550, counter: '마리' },
+  { id: 'apartment', name: '아파트 5층', cm: 1_500, counter: '채' },
+  { id: 'building63', name: '63빌딩', cm: 24_900, counter: '개' },
+  { id: 'lotteTower', name: '롯데월드타워', cm: 55_500, counter: '개' },
+  { id: 'hallasan', name: '한라산', cm: 194_700, counter: '개' },
+  { id: 'everest', name: '에베레스트', cm: 884_800, counter: '개' },
+  { id: 'stratosphere', name: '성층권', cm: 5_000_000, counter: '개' },
+  { id: 'karman', name: '카르만 선', cm: 10_000_000, counter: '개' },
+  { id: 'iss', name: 'ISS 궤도', cm: 40_800_000, counter: '개' },
+  { id: 'moon', name: '달까지 거리', cm: 38_440_000_000, counter: '개' },
 ];
 
-function heightAnalogy(cm: number): string {
-  if (!Number.isFinite(cm) || cm <= 0) return '아직 아무것도 안 쌓았어요';
+/**
+ * 비율이 1 이상인 가장 큰 랜드마크를 고른다. 그보다 낮으면 가장 작은 것.
+ */
+export function pickLandmark(cm: number): HeightComparison {
+  const first = LANDMARKS[0]!;
+  if (!Number.isFinite(cm) || cm <= 0) return { landmark: first, ratio: 0 };
 
-  // 비율이 1 이상인 가장 큰 랜드마크를 고른다. 없으면 가장 작은 것.
-  let picked: Landmark = LANDMARKS[0]!;
+  let picked = first;
   for (const landmark of LANDMARKS) {
     if (cm / landmark.cm >= 1) picked = landmark;
     else break;
   }
+  return { landmark: picked, ratio: cm / picked.cm };
+}
 
-  const ratio = cm / picked.cm;
-  if (ratio < 1) return `${picked.name}의 ${trim1(ratio)}배`;
-  return `${picked.name} ${trim1(ratio)}${picked.counter} 높이`;
+function heightAnalogy({ landmark, ratio }: HeightComparison): string {
+  if (ratio <= 0) return '아직 아무것도 안 쌓았어요';
+  if (ratio < 1) return `${landmark.name}의 ${trim1(ratio)}배`;
+  return `${landmark.name} ${trim1(ratio)}${landmark.counter} 높이`;
 }
 
 const CM_PER_M = 100;
@@ -137,16 +173,19 @@ const CM_PER_KM = 100_000;
  * 높이를 상황에 맞는 단위(cm → m → km)로 바꾸고, 비유 문자열을 함께 반환한다.
  */
 export function formatHeight(cm: number): FormattedHeight {
-  const analogy = heightAnalogy(cm);
-  if (!Number.isFinite(cm) || cm <= 0) return { value: '0cm', analogy };
+  const comparison = pickLandmark(cm);
+  const analogy = heightAnalogy(comparison);
 
-  if (cm < CM_PER_M) return { value: `${trim1(cm)}cm`, analogy };
-  if (cm < CM_PER_KM) return { value: `${trim1(cm / CM_PER_M)}m`, analogy };
+  if (!Number.isFinite(cm) || cm <= 0) return { value: '0cm', analogy, comparison };
+  if (cm < CM_PER_M) return { value: `${trim1(cm)}cm`, analogy, comparison };
+  if (cm < CM_PER_KM) {
+    return { value: `${trim1(cm / CM_PER_M)}m`, analogy, comparison };
+  }
 
   const km = cm / CM_PER_KM;
   // km 단위에서 소수점은 큰 수에서 의미가 없어진다.
   const value = km >= 1000 ? formatKoreanNumber(km) : trim1(km);
-  return { value: `${value}km`, analogy };
+  return { value: `${value}km`, analogy, comparison };
 }
 
 const WORK_HOURS_PER_DAY = 8;
