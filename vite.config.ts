@@ -2,7 +2,14 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+/**
+ * 서브패스 배포용. GitHub Pages는 /<repo>/ 아래에서 서빙되므로 BASE_PATH를 준다.
+ * Cloudflare Pages·Vercel은 루트라서 미설정으로 두면 된다.
+ */
+const base = process.env.BASE_PATH ?? '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -16,12 +23,14 @@ export default defineConfig({
         theme_color: '#f6f4ef',
         background_color: '#f6f4ef',
         display: 'standalone',
-        start_url: '/',
+        // 상대경로로 둔다. manifest 자신의 위치를 기준으로 풀리므로
+        // 루트 배포와 서브패스 배포 양쪽에서 그대로 맞는다.
+        start_url: '.',
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
           {
-            src: '/icon-512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',

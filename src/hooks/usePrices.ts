@@ -24,7 +24,13 @@ export function usePrices(): PricesState {
     const controller = new AbortController();
     let alive = true;
 
-    loadPrices({ signal: controller.signal, fallback: FALLBACK_PRICE_DATA }).then(
+    // base 해석은 UI 레이어에서 한다. 도메인에 import.meta.env를 들이면
+    // "도메인은 순수 TS" 제약이 깨진다. BASE_URL은 항상 '/'로 끝난다.
+    loadPrices({
+      url: `${import.meta.env.BASE_URL}data/prices.json`,
+      signal: controller.signal,
+      fallback: FALLBACK_PRICE_DATA,
+    }).then(
       (result) => {
         if (!alive) return;
         setState({ data: result.data, origin: result.origin, loading: false });

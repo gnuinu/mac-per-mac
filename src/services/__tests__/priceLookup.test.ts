@@ -244,6 +244,68 @@ describe('1단계 카탈로그 매칭 (실제 구현)', () => {
   });
 });
 
+describe('apiBaseUrl (배포 형태별 동작)', () => {
+  function recordingFetcher() {
+    const urls: string[] = [];
+    const fetcher = (async (input: string) => {
+      urls.push(input);
+      return { ok: false, status: 404, json: async () => ({}) } as Response;
+    }) as unknown as typeof fetch;
+    return { urls, fetcher };
+  }
+
+  it('미설정이면 같은 출처로 부른다 (Cloudflare Pages·Vercel)', async () => {
+    const { urls, fetcher } = recordingFetcher();
+    await expect(
+      lookupPrice('한 번도 본 적 없는 물건', { catalog, fetcher }),
+    ).rejects.toMatchObject({ reason: 'not_found' });
+
+    expect(urls).toEqual([
+      '/api/shopping?q=%ED%95%9C%20%EB%B2%88%EB%8F%84%20%EB%B3%B8%20%EC%A0%81%20%EC%97%86%EB%8A%94%20%EB%AC%BC%EA%B1%B4',
+      '/api/estimate?q=%ED%95%9C%20%EB%B2%88%EB%8F%84%20%EB%B3%B8%20%EC%A0%81%20%EC%97%86%EB%8A%94%20%EB%AC%BC%EA%B1%B4',
+    ]);
+  });
+
+  it('다른 출처를 주면 그쪽으로 부른다 (정적 호스팅 + 외부 함수)', async () => {
+    const { urls, fetcher } = recordingFetcher();
+    await expect(
+      lookupPrice('에펠탑', {
+        catalog,
+        fetcher,
+        apiBaseUrl: 'https://api.example.test',
+      }),
+    ).rejects.toMatchObject({ reason: 'not_found' });
+
+    expect(urls).toEqual([
+      'https://api.example.test/api/shopping?q=%EC%97%90%ED%8E%A0%ED%83%91',
+      'https://api.example.test/api/estimate?q=%EC%97%90%ED%8E%A0%ED%83%91',
+    ]);
+  });
+
+  it('null이면 원격 단계를 아예 건너뛴다 (GitHub Pages 단독)', async () => {
+    const { urls, fetcher } = recordingFetcher();
+    const seen: string[] = [];
+
+    await expect(
+      lookupPrice('에펠탑', {
+        catalog,
+        fetcher,
+        apiBaseUrl: null,
+        onStage: (stage) => seen.push(stage),
+      }),
+    ).rejects.toMatchObject({ reason: 'not_found' });
+
+    // 요청도 없고, 있지도 않은 단계를 진행 중이라고 표시하지도 않는다.
+    expect(urls).toEqual([]);
+    expect(seen).toEqual(['catalog']);
+  });
+
+  it('null이어도 카탈로그 단계는 그대로 동작한다', async () => {
+    const result = await lookupPrice('맥 미니 M4', { catalog, apiBaseUrl: null });
+    expect(result.source).toBe('catalog');
+  });
+});
+
 describe('similarity', () => {
   it('완전히 같으면 1', () => {
     expect(similarity('맥 미니', '맥미니')).toBe(1);

@@ -58,8 +58,21 @@ export interface LookupDeps {
   fetcher?: typeof fetch;
   onStage?: (stage: LookupStage) => void;
   signal?: AbortSignal;
+  /**
+   * 조회 API가 있는 곳.
+   *   ''                    같은 출처 (`/api/…`). Cloudflare Pages·Vercel 기본.
+   *   'https://api.example' 다른 출처. 정적 호스팅 + 외부 함수 조합.
+   *   null                  원격 단계(2·3)를 아예 건너뛴다. GitHub Pages 단독.
+   */
+  apiBaseUrl?: string | null;
   /** 테스트에서 단계를 직접 갈아끼우기 위한 훅. */
   stages?: Partial<LookupStages>;
+}
+
+/** 원격 단계가 호출할 엔드포인트. 원격이 꺼져 있으면 null. */
+function endpoint(deps: LookupDeps, path: string, query: string): string | null {
+  if (deps.apiBaseUrl === null) return null;
+  return `${deps.apiBaseUrl ?? ''}/api/${path}?q=${encodeURIComponent(query)}`;
 }
 
 export interface LookupStages {
@@ -156,11 +169,12 @@ async function fromShopping(
   query: string,
   deps: LookupDeps,
 ): Promise<PriceLookupResult | null> {
+  const url = endpoint(deps, 'shopping', query);
   const fetcher = deps.fetcher ?? globalThis.fetch?.bind(globalThis);
-  if (!fetcher) return null;
+  if (!url || !fetcher) return null;
 
   const response = await fetcher(
-    `/api/shopping?q=${encodeURIComponent(query)}`,
+    url,
     deps.signal ? { signal: deps.signal } : undefined,
   );
   // 404는 "쓸 만한 결과가 없다"는 정상적인 신호다. 조용히 다음 단계로.
@@ -193,11 +207,12 @@ async function fromEstimate(
   query: string,
   deps: LookupDeps,
 ): Promise<PriceLookupResult | null> {
+  const url = endpoint(deps, 'estimate', query);
   const fetcher = deps.fetcher ?? globalThis.fetch?.bind(globalThis);
-  if (!fetcher) return null;
+  if (!url || !fetcher) return null;
 
   const response = await fetcher(
-    `/api/estimate?q=${encodeURIComponent(query)}`,
+    url,
     deps.signal ? { signal: deps.signal } : undefined,
   );
   if (!response.ok) return null;
@@ -222,10 +237,15 @@ async function fromEstimate(
 
 export const DEFAULT_STAGES: LookupStages = { fromCatalog, fromShopping, fromEstimate };
 
-const PIPELINE: { stage: LookupStage; key: keyof LookupStages }[] = [
-  { stage: 'catalog', key: 'fromCatalog' },
-  { stage: 'shopping', key: 'fromShopping' },
-  { stage: 'estimate', key: 'fromEstimate' },
+const PIPELINE: {
+  stage: LookupStage;
+  key: keyof LookupStages;
+  /** 서버 함수를 필요로 하는 단계인지. */
+  remote: boolean;
+}[] = [
+  { stage: 'catalog', key: 'fromCatalog', remote: false },
+  { stage: 'shopping', key: 'fromShopping', remote: true },
+  { stage: 'estimate', key: 'fromEstimate', remote: true },
 ];
 
 /**
@@ -245,8 +265,12 @@ export async function lookupPrice(
   }
 
   const stages = { ...DEFAULT_STAGES, ...deps.stages };
+  // 정적 호스팅에는 서버 함수가 없다. 있지도 않은 단계를 진행 중이라고
+  // 표시했다가 실패하는 것보다, 아예 건너뛰는 편이 정직하다.
+  const skipRemote = deps.apiBaseUrl === null && deps.stages === undefined;
 
-  for (const { stage, key } of PIPELINE) {
+  for (const { stage, key, remote } of PIPELINE) {
+    if (remote && skipRemote) continue;
     deps.onStage?.(stage);
     try {
       const result = await withTimeout(

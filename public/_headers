@@ -1,0 +1,10 @@
+# Cloudflare Pages 헤더 규칙. 다른 호스팅에서는 무시되는 평범한 파일이다.
+# (Vercel은 같은 목적으로 vercel.json의 headers를 쓴다.)
+
+# 가격 데이터는 재배포 없이 갈아끼울 수 있어야 하므로 캐시하지 않는다.
+/data/prices.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+# 해시가 박힌 번들은 영구 캐시.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

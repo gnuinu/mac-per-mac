@@ -1,9 +1,10 @@
 /**
- * 서버리스 함수용 인메모리 캐시 + 레이트 리밋.
+ * 인메모리 캐시 + 레이트 리밋.
  *
- * 인스턴스 단위 메모리라서 콜드 스타트나 스케일 아웃 시 초기화된다.
- * 남용을 막고 같은 쿼리의 반복 호출을 줄이는 게 목적이지 엄밀한 보장은 아니다.
- * 엄밀함이 필요해지면 Vercel KV 같은 외부 저장소로 옮기면 된다.
+ * 인스턴스(Node 람다 / Workers isolate) 단위 메모리라서 콜드 스타트나 스케일
+ * 아웃 시 초기화된다. 남용을 막고 같은 쿼리의 반복 호출을 줄이는 게 목적이지
+ * 엄밀한 보장은 아니다. 엄밀함이 필요해지면 Cloudflare KV나 Durable Object로
+ * 옮기면 된다 — 구현만 갈아끼울 수 있게 인터페이스를 좁게 잡았다.
  */
 
 interface CacheEntry<T> {
@@ -67,21 +68,4 @@ export class RateLimiter {
       if (now - entry.windowStart >= this.windowMs) this.hits.delete(key);
     }
   }
-}
-
-/** x-forwarded-for의 첫 번째 주소가 실제 클라이언트다. */
-export function clientIp(headers: Record<string, string | string[] | undefined>): string {
-  const forwarded = headers['x-forwarded-for'];
-  const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  return raw?.split(',')[0]?.trim() || 'unknown';
-}
-
-export function readQuery(
-  value: string | string[] | undefined,
-  maxLength = 100,
-): string | null {
-  const raw = Array.isArray(value) ? value[0] : value;
-  const trimmed = raw?.trim();
-  if (!trimmed) return null;
-  return trimmed.slice(0, maxLength);
 }

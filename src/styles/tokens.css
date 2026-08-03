@@ -1,25 +1,62 @@
 /*
- * 디자인 토큰. 강조색은 --accent 하나뿐이고, 나머지는 전부 무채색이다.
- * 강조색을 바꾸려면 라이트/다크 두 줄만 고치면 된다.
+ * 디자인 토큰.
+ *
+ * 방향은 그대로 "가격표 / 영수증 / 계산기" — 강조색은 하나뿐이고 나머지는
+ * 무채색이다. 바뀐 건 표현 방식이다: 딱딱한 1px 테두리 대신 헤어라인 링 +
+ * 부드러운 그림자로 깊이를 주고, 반경을 키우고, 색 파생은 손으로 고른
+ * 알파 헥스 대신 color-mix로 뽑는다.
+ *
+ * 강조색을 바꾸려면 --accent 두 줄(라이트/다크)만 고치면 된다.
  */
 
 :root {
-  --paper: #f6f4ef;
-  --paper-raised: #fffdf8;
-  --ink: #1a1a18;
-  --muted: #8a8780;
-  --rule: #d8d4ca;
-  --accent: #1f6f5c;
-  --accent-soft: #1f6f5c1a;
-  --shadow: 0 1px 2px #1a1a1810, 0 8px 24px #1a1a1808;
+  /* ── 표면 ────────────────────────────────────────────────── */
+  --paper: #f2f0ea; /* 페이지 바닥 */
+  --surface: #fbfaf7; /* 올라온 카드 */
+  --surface-hi: #ffffff; /* 가장 위 (히어로) */
 
+  /* ── 잉크 ────────────────────────────────────────────────── */
+  --ink: #17171a;
+  --ink-2: #55555d; /* 본문 보조 */
+  --muted: #8b8a85; /* 라벨·주석 */
+
+  /* ── 선 ──────────────────────────────────────────────────── */
+  --rule: #e0dcd2; /* 점선 구분선 */
+  --hairline: color-mix(in oklab, #17171a 9%, transparent);
+
+  /* ── 강조색 (단 하나) ────────────────────────────────────── */
+  --accent: #146b58;
+  --accent-soft: color-mix(in oklab, var(--accent) 9%, transparent);
+  --accent-ring: color-mix(in oklab, var(--accent) 24%, transparent);
+  --accent-line: color-mix(in oklab, var(--accent) 38%, transparent);
+  --accent-glow: transparent; /* 다크에서만 켠다 */
+
+  /* ── 깊이: 헤어라인 링 + 겹친 부드러운 그림자 ───────────── */
+  --shadow-sm: 0 0 0 1px var(--hairline), 0 1px 2px -1px rgb(23 23 26 / 0.09);
+  --shadow-md: 0 0 0 1px var(--hairline), 0 2px 6px -3px rgb(23 23 26 / 0.09),
+    0 14px 32px -12px rgb(23 23 26 / 0.14);
+
+  /* ── 반경 ────────────────────────────────────────────────── */
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* ── 타이포 ──────────────────────────────────────────────── */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo',
     'Malgun Gothic', 'Noto Sans KR', sans-serif;
-  /* 숫자가 주인공이므로 등폭 서체 + tabular-nums. 웹폰트는 받지 않는다 —
+  /* 숫자가 주인공이므로 등폭 + tabular-nums. 웹폰트는 받지 않는다 —
      오프라인 동작과 공유 카드 canvas 렌더링이 폰트 로딩을 기다리지 않게. */
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'JetBrains Mono', Menlo,
     Consolas, 'Liberation Mono', monospace;
 
+  --text-xs: 0.7rem;
+  --text-sm: 0.8rem;
+  --text-base: 0.9rem;
+  --text-lg: 1.05rem;
+  --display: clamp(2.7rem, 11vw, 5.5rem);
+
+  /* ── 간격 ────────────────────────────────────────────────── */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -27,21 +64,35 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --radius: 3px;
-  --radius-pill: 999px;
+  /* ── 모션 ────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
 
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #16161a;
-    --paper-raised: #1e1e23;
-    --ink: #ece9e1;
-    --muted: #8b8880;
-    --rule: #33333a;
-    --accent: #4fb89c;
-    --accent-soft: #4fb89c1f;
-    --shadow: 0 1px 2px #00000040, 0 8px 24px #00000030;
+    --paper: #0d0d10;
+    --surface: #16161a;
+    --surface-hi: #1c1c21;
+
+    --ink: #eceae4;
+    --ink-2: #a9a7a1;
+    --muted: #78766f;
+
+    --rule: #2c2c33;
+    --hairline: color-mix(in oklab, #eceae4 11%, transparent);
+
+    --accent: #4cbb99;
+    --accent-soft: color-mix(in oklab, var(--accent) 13%, transparent);
+    --accent-ring: color-mix(in oklab, var(--accent) 30%, transparent);
+    --accent-line: color-mix(in oklab, var(--accent) 42%, transparent);
+    /* 어두운 배경에서만 큰 숫자에 은은한 발광을 준다. */
+    --accent-glow: color-mix(in oklab, var(--accent) 30%, transparent);
+
+    --shadow-sm: 0 0 0 1px var(--hairline), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 0 0 1px var(--hairline), 0 2px 6px -3px rgb(0 0 0 / 0.5),
+      0 14px 32px -12px rgb(0 0 0 / 0.55);
   }
 }

@@ -1,20 +1,20 @@
 .wrap {
+  --amount-size: clamp(1.6rem, 5vw, 2.15rem);
+
   display: flex;
   align-items: baseline;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  background: var(--paper-raised);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
+  padding: var(--space-4);
+  background: var(--surface-hi);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 180ms var(--ease-out);
 }
 
 .wrap:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
-.wrap {
-  --amount-size: clamp(1.5rem, 4.5vw, 2rem);
+  box-shadow:
+    0 0 0 1px var(--accent-line),
+    0 0 0 4px var(--accent-ring);
 }
 
 .input {
@@ -25,14 +25,15 @@
   outline: none;
   font-family: var(--font-mono);
   font-size: var(--amount-size);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  font-weight: 650;
+  letter-spacing: -0.045em;
   text-align: right;
+  transition: font-size 140ms var(--ease-out);
 }
 
 .input::placeholder {
-  color: var(--rule);
-  font-weight: 400;
+  color: color-mix(in oklab, var(--muted) 45%, transparent);
+  font-weight: 500;
 }
 
 .input::-webkit-outer-spin-button,
@@ -41,15 +42,16 @@
 }
 
 .unit {
-  font-size: 1rem;
+  font-size: var(--text-base);
   color: var(--muted);
   flex-shrink: 0;
 }
 
 .label {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--muted);
-  letter-spacing: 0.04em;
   flex-shrink: 0;
   align-self: center;
 }

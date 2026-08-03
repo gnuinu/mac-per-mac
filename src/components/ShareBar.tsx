@@ -72,7 +72,7 @@ export function ShareBar({
     <div className={styles.wrap}>
       <button
         type="button"
-        className={`${styles.button} ${feedback === 'saved' ? styles.done : ''}`}
+        className={`${styles.button} ${styles.primary}`}
         onClick={shareImage}
         disabled={busy}
       >
@@ -80,13 +80,13 @@ export function ShareBar({
       </button>
       <button
         type="button"
-        className={`${styles.button} ${feedback === 'copied' ? styles.done : ''}`}
+        className={`${styles.button} ${styles.secondary}`}
         onClick={copyLink}
       >
         {feedback === 'copied' ? '복사했어요' : '링크 복사'}
       </button>
       {feedback === 'failed' ? (
-        <span className={styles.button} role="status">
+        <span className={styles.failed} role="status">
           잘 안 됐어요. 다시 눌러보세요.
         </span>
       ) : null}

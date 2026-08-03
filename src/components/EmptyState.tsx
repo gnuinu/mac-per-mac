@@ -9,14 +9,25 @@ interface Props {
   failure: 'not_found' | 'unpriceable' | null;
 }
 
+const STAGE_ORDER: LookupStage[] = ['catalog', 'shopping', 'estimate'];
+
 export function EmptyState({ stage, failure }: Props) {
   if (stage) {
+    const reached = STAGE_ORDER.indexOf(stage);
     return (
-      <div className={styles.wrap}>
+      <div className={`${styles.wrap} ${styles.busy}`}>
         <BurgerIcon className={styles.icon} />
         <p className={`${styles.stage} ${styles.dots}`} aria-live="polite">
           {STAGE_LABELS[stage]}
         </p>
+        <div className={styles.track} aria-hidden="true">
+          {STAGE_ORDER.map((name, index) => (
+            <span
+              key={name}
+              className={`${styles.tick} ${index <= reached ? styles.tickOn : ''}`}
+            />
+          ))}
+        </div>
       </div>
     );
   }

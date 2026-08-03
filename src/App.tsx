@@ -18,6 +18,7 @@ import { EmptyState } from './components/EmptyState';
 import { PresetChips } from './components/PresetChips';
 import { ResultPanel } from './components/ResultPanel';
 import { ShareBar } from './components/ShareBar';
+import { BurgerIcon } from './components/icons/BurgerIcon';
 import styles from './App.module.css';
 
 interface State {
@@ -40,6 +41,15 @@ type Action =
   | { type: 'lookupStage'; stage: LookupStage }
   | { type: 'lookupDone'; result: PriceLookupResult }
   | { type: 'lookupFail'; failure: 'not_found' | 'unpriceable' };
+
+/**
+ * 'none'이면 원격 조회 단계를 끈다. 미설정이면 같은 출처(`/api/…`).
+ * 빌드 시점에 박히므로 런타임 분기는 없다.
+ */
+const API_BASE_URL: string | null =
+  import.meta.env.VITE_API_BASE_URL === 'none'
+    ? null
+    : (import.meta.env.VITE_API_BASE_URL ?? '');
 
 const INITIAL: State = {
   subject: '',
@@ -144,6 +154,7 @@ export default function App() {
     try {
       const found = await lookupPrice(query, {
         catalog: data.catalog,
+        apiBaseUrl: API_BASE_URL,
         onStage: (stage) => dispatch({ type: 'lookupStage', stage }),
       });
       dispatch({ type: 'lookupDone', result: found });
@@ -165,10 +176,16 @@ export default function App() {
   return (
     <div className={styles.app}>
       <header className={styles.header}>
-        <h1 className={styles.brand}>빅맥계산기</h1>
+        <h1 className={styles.brand}>
+          <BurgerIcon className={styles.brandMark} />
+          빅맥계산기
+        </h1>
         <p className={styles.meta}>
-          빅맥 {formatWon(data.bigMac.priceKRW)} · {data.bigMac.updatedAt}
-          {origin === 'fallback' ? ' · 오프라인' : ''}
+          <span>빅맥 {formatWon(data.bigMac.priceKRW)}</span>
+          <span className={styles.metaDate}>{data.bigMac.updatedAt}</span>
+          {origin === 'fallback' ? (
+            <span className={styles.offline}>오프라인</span>
+          ) : null}
         </p>
       </header>
 
@@ -184,15 +201,13 @@ export default function App() {
             onPick={(item) => dispatch({ type: 'pick', item })}
             onLookup={runLookup}
           />
-          <div>
+          <div className={styles.chipsGroup}>
             <p className={styles.sectionLabel}>바로 눌러보기</p>
-            <div style={{ marginTop: 'var(--space-2)' }}>
-              <PresetChips
-                items={chips}
-                activeId={state.pickedId}
-                onPick={(item) => dispatch({ type: 'pick', item })}
-              />
-            </div>
+            <PresetChips
+              items={chips}
+              activeId={state.pickedId}
+              onPick={(item) => dispatch({ type: 'pick', item })}
+            />
           </div>
         </div>
 

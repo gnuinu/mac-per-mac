@@ -1,25 +1,45 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  gap: var(--space-3);
+  gap: var(--space-4);
+  /* 줄어들면 안 된다. 세로 공간이 모자랄 때 양보하는 건 격자(자체 스크롤)이고,
+     이게 축소되면 지표가 박스 밖으로 삐져나와 공유 버튼과 겹친다. */
+  flex-shrink: 0;
+}
+
+@media (max-width: 53.99rem) {
+  .wrap {
+    gap: var(--space-3);
+  }
 }
 
 .head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
-  flex-wrap: wrap;
 }
 
 .subject {
-  font-size: 0.82rem;
-  color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  min-width: 0;
+}
+
+.name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  min-width: 0;
+  font-weight: 550;
+}
+
+.price {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  color: var(--muted);
 }
 
 .badges {
@@ -29,15 +49,16 @@
 }
 
 .badge {
-  font-size: 0.68rem;
-  letter-spacing: 0.03em;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
   color: var(--muted);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-pill);
-  padding: 1px var(--space-2);
+  background: color-mix(in oklab, var(--muted) 12%, transparent);
+  border-radius: var(--r-pill);
+  padding: 2px var(--space-2);
   white-space: nowrap;
 }
 
+/* 주인공 숫자. */
 .headline {
   display: flex;
   align-items: baseline;
@@ -46,23 +67,31 @@
 
 .count {
   font-family: var(--font-mono);
-  font-size: clamp(2.6rem, 11vw, 4.5rem);
+  font-size: var(--display);
   font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
   color: var(--accent);
+  /* 라이트에서는 transparent라 아무 일도 안 일어난다. */
+  text-shadow: 0 0 32px var(--accent-glow);
 }
 
 .countUnit {
-  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-size: clamp(1.1rem, 3.2vw, 1.5rem);
   font-weight: 600;
   color: var(--accent);
+  opacity: 0.75;
 }
 
 .scale {
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin-top: calc(var(--space-1) * -1);
+  display: inline-flex;
+  align-self: flex-start;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--r-pill);
+  padding: var(--space-1) var(--space-3);
 }
 
 /* 영수증 절취선. */
@@ -78,18 +107,18 @@
 }
 
 .remainder {
-  font-size: 0.82rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
 }
 
 .remainder strong {
   font-family: var(--font-mono);
   color: var(--ink);
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .note {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: var(--muted);
   display: flex;
   gap: var(--space-2);
@@ -100,5 +129,7 @@
 .source {
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  white-space: nowrap;
 }

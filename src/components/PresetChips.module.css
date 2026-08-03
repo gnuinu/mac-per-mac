@@ -4,30 +4,65 @@
   gap: var(--space-2);
 }
 
+/*
+ * 세로가 짧은 화면에서는 칩이 서너 줄을 먹어 결과 영역이 밀린다.
+ * 한 줄 가로 스크롤로 바꿔 세로 예산을 결과 쪽에 돌려준다.
+ */
+@media (max-height: 46rem) {
+  .wrap {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    /* 잘린 칩이 보여야 "옆으로 더 있다"는 게 읽힌다. */
+    mask-image: linear-gradient(to right, #000 88%, transparent);
+  }
+
+  .wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    flex-shrink: 0;
+  }
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  font-size: 0.82rem;
-  color: var(--ink);
-  background: var(--paper-raised);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-pill);
-  transition: border-color 120ms ease, color 120ms ease;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--ink-2);
+  background: var(--surface-hi);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 180ms var(--ease-spring),
+    color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
 }
 
 .chip:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  transform: translateY(-1px);
+  color: var(--ink);
+  box-shadow:
+    0 0 0 1px var(--accent-line),
+    0 4px 10px -4px rgb(0 0 0 / 0.18);
+}
+
+.chip:active {
+  transform: translateY(0);
 }
 
 .chip[aria-pressed='true'] {
-  border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent-line);
 }
 
 .emoji {
-  font-size: 0.9rem;
+  font-size: var(--text-base);
+  line-height: 1;
 }

@@ -27,12 +27,15 @@ const WIDTH = 1080;
 const HEIGHT = 1350;
 const PAD = 96;
 
-/** 라이트 테마로 고정한다. 공유된 이미지가 보는 사람 설정에 따라 달라지면 곤란하다. */
-const PAPER = '#f6f4ef';
-const INK = '#1a1a18';
-const MUTED = '#8a8780';
-const RULE = '#d8d4ca';
-const ACCENT = '#1f6f5c';
+/**
+ * 라이트 테마로 고정한다. 공유된 이미지가 보는 사람 설정에 따라 달라지면 곤란하다.
+ * 값은 tokens.css의 라이트 팔레트와 맞춰둔다 — 한쪽만 바꾸면 카드가 앱과 달라 보인다.
+ */
+const PAPER = '#f2f0ea';
+const INK = '#17171a';
+const MUTED = '#8b8a85';
+const RULE = '#e0dcd2';
+const ACCENT = '#146b58';
 
 const SANS =
   '-apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif';
@@ -155,9 +158,25 @@ export function renderCard(input: CardInput): HTMLCanvasElement {
   ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // 종이 질감 — 화면의 repeating-linear-gradient와 같은 결.
-  ctx.fillStyle = '#0000000a';
-  for (let y = 0; y < HEIGHT; y += 8) ctx.fillRect(0, y + 6, WIDTH, 2);
+  // 위쪽에 강조색이 아주 옅게 번지는 것까지 화면과 맞춘다.
+  // 반경 밖은 완전히 투명하므로 캔버스 전체를 칠해야 경계선이 안 생긴다.
+  const wash = ctx.createRadialGradient(WIDTH / 2, 0, 0, WIDTH / 2, 0, HEIGHT * 0.55);
+  wash.addColorStop(0, 'rgba(20, 107, 88, 0.07)');
+  wash.addColorStop(1, 'rgba(20, 107, 88, 0)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  // 종이 질감. 예전의 가로 줄무늬 대신 미세한 노이즈 한 겹.
+  // 시드 고정 난수라서 같은 입력이면 같은 이미지가 나온다.
+  let seed = 20260220;
+  const rand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+  ctx.fillStyle = 'rgba(23, 23, 26, 0.045)';
+  for (let i = 0; i < 9000; i += 1) {
+    ctx.fillRect(rand() * WIDTH, rand() * HEIGHT, 1.5, 1.5);
+  }
 
   ctx.textBaseline = 'alphabetic';
 

@@ -42,7 +42,8 @@ export function ResultPanel({
     <section className={styles.wrap} aria-label="환산 결과">
       <div className={styles.head}>
         <p className={styles.subject}>
-          {subject} · <span className="tnum">{formatWon(priceKRW)}</span>
+          <span className={styles.name}>{subject}</span>
+          <span className={`${styles.price} tnum`}>{formatWon(priceKRW)}</span>
         </p>
         {badge ? (
           <div className={styles.badges}>
@@ -64,11 +65,18 @@ export function ResultPanel({
       <hr className={styles.rule} />
 
       <div className={styles.metrics}>
-        <MetricRow label="총 열량" value={formatCalories(result.calories)} />
-        <MetricRow label="쌓은 높이" value={height.value} sub={height.analogy} />
+        {/* 지표는 순차로 스며 나오게 한다. reduced-motion은 reset.css가 죽인다. */}
+        <MetricRow label="총 열량" value={formatCalories(result.calories)} delayMs={0} />
+        <MetricRow
+          label="쌓은 높이"
+          value={height.value}
+          sub={height.analogy}
+          delayMs={60}
+        />
         <MetricRow
           label="필요 노동시간"
           value={work.text}
+          delayMs={120}
           {...(work.note ? { sub: work.note } : {})}
         />
       </div>
