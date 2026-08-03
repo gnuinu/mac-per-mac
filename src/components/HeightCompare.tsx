@@ -44,11 +44,11 @@ const MAX_TRUE_RATIO = 7;
 /** 잘림 모드에서 랜드마크에 주는 고정 높이. */
 const CLAMPED_LANDMARK_H = 26;
 
-/** 너무 납작한 스프라이트가 화면 밖으로 나가지 않게. */
-const MAX_SPRITE_W = 72;
-
 /** 빅맥 기둥에 그릴 최대 층수. 적을수록 층이 굵고 "쌓인" 느낌이 산다. */
 const MAX_TILES = 16;
+
+/** 사람을 그리는 구간. 너무 작으면 점 하나로 남고, 너무 크면 그림판을 덮는다. */
+const PERSON_MIN_H = 4;
 
 interface Placed {
   sprite: ParsedSprite;
@@ -58,10 +58,16 @@ interface Placed {
   h: number;
 }
 
+/**
+ * 스프라이트를 주어진 높이에 맞춘다.
+ *
+ * 폭은 제한하지 않는다. 납작한 스프라이트(구름·카르만 선)를 폭 기준으로 줄이면
+ * 높이까지 같이 줄어들어 실제 비율이 깨지기 때문이다. 그림판이 옆으로 길어지면
+ * CSS의 max-width가 전체를 한꺼번에 축소하므로 비율은 그대로 남는다.
+ */
 function place(sprite: ParsedSprite, height: number): Placed {
-  const capped = Math.min(height, (MAX_SPRITE_W * sprite.rows) / sprite.cols);
-  const unit = capped / sprite.rows;
-  return { sprite, unit, w: unit * sprite.cols, h: capped };
+  const unit = height / sprite.rows;
+  return { sprite, unit, w: unit * sprite.cols, h: height };
 }
 
 function Pixels({
@@ -117,6 +123,13 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
   );
 
   if (!Number.isFinite(stackCm) || stackCm <= 0) return null;
+  // 한 개도 못 사면 쌓을 기둥이 없다. 0.8개를 억지로 그리면 층수도 사람 크기도
+  // 전부 거짓말이 되므로 아예 그리지 않는다 — 결과 패널이 이미 "한 개까지 N원
+  // 모자라요"로 같은 사실을 말하고 있다.
+  if (burgerCount < 1) return null;
+  // 빅맥 두 개를 빅맥 한 개와 견주는 그림은 아무것도 알려주지 않는다.
+  // 이 구간은 아래의 버거 격자가 이미 실제 개수를 그대로 보여주고 있다.
+  if (landmark.id === 'bigmac') return null;
 
   const clamped = ratio > MAX_TRUE_RATIO;
 
@@ -130,18 +143,20 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
 
   const tallestCm = Math.max(stackCm, landmark.cm);
   const tallestH = Math.max(stackH, landmarkH);
-  // 사람은 늘 실제 비율로. 2px보다 작아지면 점 하나로 남아 오히려 헷갈리니 뺀다.
+  // 사람은 늘 실제 비율로 그린다. 다만 장면이 빅맥 한 개 크기일 때 사람은 그림판
+  // 스무 배 높이가 되고, 에베레스트 옆에서는 1픽셀도 안 된다. 양쪽 다 그리지 않는다.
   const personH = (PERSON_HEIGHT_CM / tallestCm) * tallestH;
-  const showPerson = personH >= 4;
+  const showPerson = personH >= PERSON_MIN_H && personH <= MAX_H;
 
   const placedLandmark = place(sprites.landmark, landmarkH);
   const placedPerson = place(sprites.person, personH);
 
-  // 빅맥 기둥: 한 층 높이를 정하고 그림판에 들어가는 만큼만 쌓는다.
-  const stackUnit = Math.max(0.9, stackH / MAX_TILES / sprites.burger.rows);
-  const tileH = stackUnit * sprites.burger.rows;
+  // 빅맥 기둥: 층수는 실제 개수에서 나온다. 그림판 높이에서 역산하면 0.8개짜리
+  // 기둥이 16층으로 그려지는 식으로 개수와 그림이 어긋난다.
+  const tiles = Math.min(Math.floor(burgerCount), MAX_TILES);
+  const tileH = stackH / tiles;
+  const stackUnit = tileH / sprites.burger.rows;
   const tileW = stackUnit * sprites.burger.cols;
-  const tiles = Math.max(1, Math.min(Math.round(stackH / tileH), MAX_TILES));
 
   // 왼쪽부터 차곡차곡 놓고, 마지막 위치로 그림판 폭을 정한다.
   let cursor = SIDE_PAD;

@@ -6,6 +6,13 @@
   flex-shrink: 0;
 }
 
+/* 모바일에서는 버거 격자보다 위로 올린다. 자세한 사정은 BurgerGrid.module.css에. */
+@media (max-width: 53.99rem) {
+  .wrap {
+    order: 1;
+  }
+}
+
 .button {
   display: inline-flex;
   align-items: center;
