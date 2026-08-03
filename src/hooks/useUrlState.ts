@@ -5,18 +5,22 @@ export interface UrlState {
   query: string;
   /** 금액. ?p= */
   priceKRW: number | null;
+  /** 비교 기준 나라. ?m= 기본 나라면 null이라 링크에 안 붙는다. */
+  marketId: string | null;
 }
 
-const EMPTY: UrlState = { query: '', priceKRW: null };
+const EMPTY: UrlState = { query: '', priceKRW: null, marketId: null };
 
 export function readUrlState(search: string): UrlState {
   const params = new URLSearchParams(search);
   const query = params.get('q')?.trim() ?? '';
   const rawPrice = params.get('p');
   const parsed = rawPrice === null ? Number.NaN : Number(rawPrice.replace(/[,\s]/g, ''));
+  const marketId = params.get('m')?.trim().toUpperCase() || null;
   return {
     query,
     priceKRW: Number.isFinite(parsed) && parsed > 0 ? parsed : null,
+    marketId,
   };
 }
 
@@ -26,6 +30,7 @@ export function buildUrlSearch(state: UrlState): string {
   if (state.priceKRW !== null && state.priceKRW > 0) {
     params.set('p', String(Math.round(state.priceKRW)));
   }
+  if (state.marketId) params.set('m', state.marketId);
   const search = params.toString();
   return search ? `?${search}` : '';
 }
@@ -44,7 +49,7 @@ export function useUrlState(state: UrlState): { initial: UrlState } {
     const next = `${window.location.pathname}${search}${window.location.hash}`;
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (next !== current) window.history.replaceState(null, '', next);
-  }, [state.query, state.priceKRW]);
+  }, [state.query, state.priceKRW, state.marketId]);
 
   return { initial: initial.current };
 }

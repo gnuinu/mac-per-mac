@@ -18,6 +18,8 @@ export interface CardInput {
   subject: string;
   priceKRW: number;
   bigMacPriceKRW: number;
+  /** 기준 나라 이름. 기본 나라면 생략된다. */
+  marketName?: string;
   result: BigMacResult;
   /** "추정치" 같은 꼬리표. 없으면 생략. */
   badge?: string;
@@ -266,7 +268,13 @@ export function renderCard(input: CardInput): HTMLCanvasElement {
   ctx.font = `22px ${SANS}`;
   ctx.fillStyle = MUTED;
   ctx.textAlign = 'left';
-  ctx.fillText(`빅맥 1개 = ${formatWon(input.bigMacPriceKRW)}`, PAD, FOOTER_Y);
+  // 나라를 바꾼 채로 공유한 이미지가 한국 기준처럼 보이면 안 된다.
+  const basis = `빅맥 1개 = ${formatWon(input.bigMacPriceKRW)}`;
+  ctx.fillText(
+    input.marketName ? `${basis} · ${input.marketName} 기준` : basis,
+    PAD,
+    FOOTER_Y,
+  );
 
   const hidden = whole - drawn;
   if (hidden > 0) {

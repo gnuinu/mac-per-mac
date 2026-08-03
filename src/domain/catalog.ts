@@ -1,5 +1,6 @@
 import { normalize, toChosung, isChosungOnly } from './hangul';
-import type { Category, CatalogItem, PriceData } from './types';
+import { bigMacPriceKRW, minimumWageKRW } from './market';
+import type { Category, CatalogItem, Market, PriceData } from './types';
 
 export const PRICES_URL = '/data/prices.json';
 
@@ -65,6 +66,40 @@ function parseCatalogItem(raw: unknown, index: number): CatalogItem {
   };
 }
 
+function parseMarket(raw: unknown, index: number): Market {
+  const path = `markets[${index}]`;
+  if (typeof raw !== 'object' || raw === null) {
+    throw new PriceDataError(`${path}가 객체가 아닙니다`);
+  }
+  const o = raw as Record<string, unknown>;
+
+  const decimals = o.decimals;
+  if (
+    typeof decimals !== 'number' ||
+    !Number.isInteger(decimals) ||
+    decimals < 0 ||
+    decimals > 4
+  ) {
+    throw new PriceDataError(`${path}.decimals는 0~4의 정수여야 합니다`);
+  }
+
+  return {
+    id: requireString(o.id, `${path}.id`),
+    name: requireString(o.name, `${path}.name`),
+    currency: requireString(o.currency, `${path}.currency`),
+    symbol: requireString(o.symbol, `${path}.symbol`),
+    decimals,
+    bigMacPrice: requirePositiveNumber(o.bigMacPrice, `${path}.bigMacPrice`),
+    fxToKRW: requirePositiveNumber(o.fxToKRW, `${path}.fxToKRW`),
+    minimumWage: requirePositiveNumber(o.minimumWage, `${path}.minimumWage`),
+    updatedAt: requireString(o.updatedAt, `${path}.updatedAt`),
+    source: requireString(o.source, `${path}.source`),
+    ...(o.symbolAfter === true ? { symbolAfter: true } : {}),
+    ...(o.uncertain === true ? { uncertain: true } : {}),
+    ...(typeof o.note === 'string' && o.note ? { note: o.note } : {}),
+  };
+}
+
 /**
  * 원격에서 받은 값을 검증해 PriceData로 만든다.
  * 잘못된 데이터로 앱 전체가 이상해지느니 여기서 던지고 fallback을 쓴다.
@@ -94,19 +129,46 @@ export function parsePriceData(raw: unknown): PriceData {
     seen.add(item.id);
   }
 
+  if (!Array.isArray(o.markets) || o.markets.length === 0) {
+    throw new PriceDataError('markets가 비어 있지 않은 배열이 아닙니다');
+  }
+  const markets = o.markets.map(parseMarket);
+  const marketIds = new Set<string>();
+  for (const market of markets) {
+    if (marketIds.has(market.id)) {
+      throw new PriceDataError(`markets에 중복된 id가 있습니다: ${market.id}`);
+    }
+    marketIds.add(market.id);
+  }
+
+  const defaultMarketId = requireString(o.defaultMarket, 'defaultMarket');
+  const base = markets.find((m) => m.id === defaultMarketId);
+  if (!base) {
+    throw new PriceDataError(
+      `defaultMarket이 markets에 없습니다: ${defaultMarketId}`,
+    );
+  }
+
   return {
+    /*
+     * bigMac·minimumWageKRW는 기본 나라에서 파생시킨다. JSON의 진실은 markets
+     * 한 벌뿐이라 두 값이 조용히 어긋날 수 없고, 나라를 모르는 기존 소비자는
+     * 예전 필드를 그대로 읽으면 된다.
+     */
     bigMac: {
-      priceKRW: requirePositiveNumber(b.priceKRW, 'bigMac.priceKRW'),
-      updatedAt: requireString(b.updatedAt, 'bigMac.updatedAt'),
-      source: requireString(b.source, 'bigMac.source'),
+      priceKRW: bigMacPriceKRW(base),
+      updatedAt: base.updatedAt,
+      source: base.source,
       caloriesPerUnit: requirePositiveNumber(
         b.caloriesPerUnit,
         'bigMac.caloriesPerUnit',
       ),
       heightCm: requirePositiveNumber(b.heightCm, 'bigMac.heightCm'),
     },
-    minimumWageKRW: requirePositiveNumber(o.minimumWageKRW, 'minimumWageKRW'),
+    minimumWageKRW: minimumWageKRW(base),
     catalog,
+    markets,
+    defaultMarketId,
   };
 }
 

@@ -1,0 +1,186 @@
+.wrap {
+  position: relative;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* 기존 헤더 알약의 생김새를 그대로 물려받되, 누를 수 있다는 것만 더한다. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--muted);
+  background: var(--surface);
+  border-radius: var(--r-pill);
+  padding: var(--space-1) var(--space-3);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  min-width: 0;
+  transition:
+    color 160ms var(--ease-out),
+    box-shadow 160ms var(--ease-out);
+}
+
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--accent-line);
+}
+
+.flagless {
+  color: var(--ink-2);
+  font-family: var(--font-sans);
+}
+
+.price {
+  color: var(--ink);
+}
+
+.caret {
+  width: 0.5rem;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.trigger[aria-expanded='true'] .caret {
+  transform: rotate(180deg);
+}
+
+.sheet {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(22rem, calc(100vw - var(--space-5)));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  /* 헤더의 알약이 nowrap이라 그대로 두면 시트 안 설명이 한 줄로 뻗다 잘린다. */
+  white-space: normal;
+  background: var(--surface-hi);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-md);
+  animation: drop 200ms var(--ease-out) both;
+}
+
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/*
+ * 좁은 화면에서는 팝오버 대신 바닥에서 올라오는 시트로 바꾼다. 헤더 오른쪽에
+ * 매달아두면 목록이 화면 폭을 넘거나 손가락이 닿기 힘든 위치에 놓인다.
+ */
+@media (max-width: 32rem) {
+  .sheet {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto;
+    max-width: none;
+    max-height: 80dvh;
+    overflow-y: auto;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
+    animation-name: rise;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+}
+
+.caption {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  /* 전역 리셋에 목록 항목이 없어서 여기서 끈다. 이 앱의 유일한 ul이다. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 영수증의 "라벨 … 점선 … 값" 짜임을 그대로 쓴다. 새 시각 언어를 늘리지 않는다. */
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border-radius: var(--r-sm);
+  text-align: left;
+  transition: background 140ms var(--ease-out);
+}
+
+.row:hover {
+  background: var(--accent-soft);
+}
+
+.active {
+  background: var(--accent-soft);
+}
+
+.name {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.active .name {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.badge {
+  font-size: 0.625rem;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.rowPrice {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.dots {
+  flex: 1;
+  min-width: var(--space-4);
+  align-self: center;
+  border-bottom: 1px dotted var(--rule);
+}
+
+.count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.active .count {
+  color: var(--accent);
+}
+
+.note {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--muted);
+}

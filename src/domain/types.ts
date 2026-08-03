@@ -21,6 +21,38 @@ export interface BigMacSpec {
   heightCm: number;
 }
 
+/**
+ * 비교 대상 나라. 빅맥 가격과 최저시급을 그 나라 통화로 들고 있고,
+ * `fxToKRW`로 원화 환산한다.
+ *
+ * 열량·높이는 여기 없다. 빅맥은 어느 나라에서나 같은 물건이라
+ * `bigMac.caloriesPerUnit`/`heightCm`이 전역으로 남는다.
+ */
+export interface Market {
+  /** ISO 3166-1 alpha-2. URL의 ?m= 값으로도 쓴다. */
+  id: string;
+  name: string;
+  currency: string;
+  /** 통화 기호. Intl 대신 명시하는 이유는 market.ts 주석 참고. */
+  symbol: string;
+  /** 기호를 숫자 뒤에 붙이면 true (원, 엔은 앞이 관례라 false). */
+  symbolAfter?: boolean;
+  /** 소수 자릿수. 원·엔은 0, 달러·유로는 2. */
+  decimals: number;
+  /** 현지 통화 기준 빅맥 가격. */
+  bigMacPrice: number;
+  /** 현지 통화 1단위당 원. 한국은 1. */
+  fxToKRW: number;
+  /** 현지 통화 기준 시간당 최저임금. */
+  minimumWage: number;
+  updatedAt: string;
+  source: string;
+  /** 값이 확실치 않으면 true. UI에서 "추정"으로 노출된다. */
+  uncertain?: boolean;
+  /** 기준이나 예외를 적어두는 한 줄. 인도의 마하라자 맥 같은 것. */
+  note?: string;
+}
+
 export interface CatalogItem {
   id: string;
   name: string;
@@ -34,9 +66,15 @@ export interface CatalogItem {
 }
 
 export interface PriceData {
+  /**
+   * 기본 나라(defaultMarket)에서 파생된 값. markets가 진실이고 이건 편의용이라,
+   * 나라를 고르지 않은 소비자는 예전과 똑같이 동작한다.
+   */
   bigMac: BigMacSpec;
   minimumWageKRW: number;
   catalog: CatalogItem[];
+  markets: Market[];
+  defaultMarketId: string;
 }
 
 export interface BigMacResult {
