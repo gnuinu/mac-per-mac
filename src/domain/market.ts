@@ -40,6 +40,22 @@ export function resolveMarket(
   return fallback;
 }
 
+/**
+ * 목록을 "지금 다른 나라"와 "지난 시절"로 가른다. 둘은 같은 Market이지만
+ * 묻는 질문이 다르다 — 앞은 "거기선 얼마?", 뒤는 "그때였다면 얼마?"다.
+ * 시절은 최근이 위로 오게 뒤집는다. 2000년보다 2023년이 먼저 궁금하다.
+ */
+export function groupMarkets(markets: readonly Market[]): {
+  places: Market[];
+  eras: Market[];
+} {
+  const places = markets.filter((m) => m.era === undefined);
+  const eras = markets
+    .filter((m) => m.era !== undefined)
+    .sort((a, b) => b.era! - a.era!);
+  return { places, eras };
+}
+
 /** 그 나라 빅맥 한 개의 원화 가격. */
 export function bigMacPriceKRW(market: Market): number {
   return market.bigMacPrice * market.fxToKRW;

@@ -1,14 +1,15 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { toBigMacs } from '../domain/bigmac';
-import { formatCount, formatWon } from '../domain/format';
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { toBigMacs } from "../domain/bigmac";
+import { formatCount, formatWon } from "../domain/format";
 import {
   bigMacPriceKRW,
   formatMarketPrice,
   formatValuation,
+  groupMarkets,
   valuationGap,
-} from '../domain/market';
-import type { Market } from '../domain/types';
-import styles from './MarketPicker.module.css';
+} from "../domain/market";
+import type { Market } from "../domain/types";
+import styles from "./MarketPicker.module.css";
 
 interface Props {
   markets: readonly Market[];
@@ -26,18 +27,32 @@ interface Props {
  * 목록을 훑는 동안 비교가 끝나므로, 본 화면에 비교표를 위한 세로 공간을
  * 따로 낼 필요가 없다. 이 앱에서 세로는 늘 모자란 자원이다.
  */
-export function MarketPicker({ markets, selected, base, priceKRW, onSelect }: Props) {
+export function MarketPicker({
+  markets,
+  selected,
+  base,
+  priceKRW,
+  onSelect,
+}: Props) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
 
-  const rows = useMemo(() => {
-    return markets.map((market) => {
-      const unit = bigMacPriceKRW(market);
-      const count = priceKRW === null ? null : toBigMacs(priceKRW, unit).wholeCount;
-      return { market, count, price: formatMarketPrice(market) };
+  const groups = useMemo(() => {
+    const row = (market: Market) => ({
+      market,
+      count:
+        priceKRW === null
+          ? null
+          : toBigMacs(priceKRW, bigMacPriceKRW(market)).wholeCount,
+      price: formatMarketPrice(market),
     });
+    const { places, eras } = groupMarkets(markets);
+    return [
+      { key: "places", label: "지금, 다른 나라에서", rows: places.map(row) },
+      { key: "eras", label: "이 돈을 그때 들고 갔다면", rows: eras.map(row) },
+    ].filter((g) => g.rows.length > 0);
   }, [markets, priceKRW]);
 
   // 바깥 클릭과 Escape로 닫는다. 외부 UI 라이브러리를 쓰지 않기로 해서 직접 짰다.
@@ -48,20 +63,24 @@ export function MarketPicker({ markets, selected, base, priceKRW, onSelect }: Pr
       if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
     }
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'Escape') return;
+      if (event.key !== "Escape") return;
       setOpen(false);
       buttonRef.current?.focus();
     }
 
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
 
-  const gap = selected.id === base.id ? null : formatValuation(valuationGap(base, selected));
+  // 지난 시절은 같은 통화라 "저평가"라는 말이 성립하지 않는다. 물가가 오른 것뿐이다.
+  const gap =
+    selected.id === base.id || selected.era !== undefined
+      ? null
+      : formatValuation(valuationGap(base, selected));
 
   return (
     <div className={styles.wrap} ref={wrapRef}>
@@ -75,59 +94,76 @@ export function MarketPicker({ markets, selected, base, priceKRW, onSelect }: Pr
         aria-label={`빅맥 가격 기준 나라. 현재 ${selected.name}. 눌러서 바꾸기`}
       >
         <span className={styles.flagless}>{selected.name}</span>
-        <span className={`${styles.price} tnum`}>{formatMarketPrice(selected)}</span>
+        <span className={`${styles.price} tnum`}>
+          {formatMarketPrice(selected)}
+        </span>
         <svg className={styles.caret} viewBox="0 0 10 6" aria-hidden="true">
-          <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+          <path
+            d="M1 1l4 4 4-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
         </svg>
       </button>
 
       {open ? (
-        <div className={styles.sheet} id={listId} role="listbox" aria-label="나라 고르기">
+        <div className={styles.sheet} id={listId} aria-label="기준 고르기">
           <p className={styles.caption}>빅맥 한 개 값으로 견주기</p>
 
-          <ul className={styles.list}>
-            {rows.map(({ market, count, price }) => {
-              const active = market.id === selected.id;
-              return (
-                <li key={market.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={active}
-                    className={`${styles.row} ${active ? styles.active : ''}`}
-                    onClick={() => {
-                      onSelect(market);
-                      setOpen(false);
-                    }}
-                  >
-                    <span className={styles.name}>
-                      {market.name}
-                      {market.uncertain ? (
-                        <em className={styles.badge}>추정</em>
-                      ) : null}
-                    </span>
-                    <span className={`${styles.rowPrice} tnum`}>{price}</span>
-                    <span className={styles.dots} aria-hidden="true" />
-                    <span className={`${styles.count} tnum`}>
-                      {count === null ? '—' : formatCount(count)}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          {groups.map((group) => (
+            <div key={group.key} className={styles.group}>
+              <p className={styles.groupLabel}>{group.label}</p>
+              <ul className={styles.list}>
+                {group.rows.map(({ market, count, price }) => {
+                  const active = market.id === selected.id;
+                  return (
+                    <li key={market.id}>
+                      <button
+                        type="button"
+                        aria-current={active ? "true" : undefined}
+                        className={`${styles.row} ${active ? styles.active : ""}`}
+                        onClick={() => {
+                          onSelect(market);
+                          setOpen(false);
+                        }}
+                      >
+                        <span className={styles.name}>
+                          {market.name}
+                          {market.uncertain ? (
+                            <em className={styles.badge}>추정</em>
+                          ) : null}
+                        </span>
+                        <span className={`${styles.rowPrice} tnum`}>
+                          {price}
+                        </span>
+                        <span className={styles.dots} aria-hidden="true" />
+                        <span className={`${styles.count} tnum`}>
+                          {count === null ? "—" : formatCount(count)}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
 
-          {selected.note ? <p className={styles.note}>{selected.note}</p> : null}
+          {selected.note ? (
+            <p className={styles.note}>{selected.note}</p>
+          ) : null}
 
           {gap ? (
             <p className={styles.note}>
-              빅맥 가격만 놓고 보면 원화는 {selected.name} 통화 대비 {gap}입니다.
+              빅맥 가격만 놓고 보면 원화는 {selected.name} 통화 대비 {gap}
+              입니다.
             </p>
           ) : null}
 
           <p className={styles.note}>
-            {selected.name} 최저시급 {formatWon(Math.round(selected.minimumWage * selected.fxToKRW))}
-            {' 기준 · '}
+            {selected.name} 최저시급{" "}
+            {formatWon(Math.round(selected.minimumWage * selected.fxToKRW))}
+            {" 기준 · "}
             환율은 {selected.updatedAt} 기준입니다.
           </p>
         </div>

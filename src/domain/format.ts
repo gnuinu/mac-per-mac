@@ -117,6 +117,55 @@ export function formatCalories(kcal: number): string {
   return `${formatKoreanNumber(kcal)}kcal`;
 }
 
+/**
+ * 열량 비유 사다리. 높이 사다리와 같은 짜임이다 — kcal 오름차순이고,
+ * 이웃과 최소 몇 배씩 벌려 두었다. 촘촘하면 무엇을 넣든 "1.1번"만 나와서
+ * 사다리가 있으나 마나 해진다.
+ *
+ * 걷기는 체중 70kg 기준 1km에 약 50kcal로 잡았다.
+ */
+export interface Activity {
+  id: string;
+  name: string;
+  kcal: number;
+  counter: string;
+}
+
+export const ACTIVITIES: readonly Activity[] = [
+  { id: 'stairs', name: '계단 한 층 오르기', kcal: 5, counter: '번' },
+  { id: 'walk1km', name: '한 정거장 걷기', kcal: 50, counter: '번' },
+  { id: 'namsan', name: '남산 오르기', kcal: 300, counter: '번' },
+  { id: 'marathon', name: '마라톤 완주', kcal: 2_800, counter: '번' },
+  { id: 'seoulBusan', name: '서울에서 부산까지 걷기', kcal: 20_000, counter: '번' },
+  { id: 'earth', name: '지구 한 바퀴 걷기', kcal: 2_000_000, counter: '번' },
+];
+
+export interface ActivityComparison {
+  activity: Activity;
+  ratio: number;
+}
+
+/** 비율이 1 이상인 것 중 가장 큰 활동을 고른다. pickLandmark와 같은 규칙. */
+export function pickActivity(kcal: number): ActivityComparison {
+  const first = ACTIVITIES[0]!;
+  if (!Number.isFinite(kcal) || kcal <= 0) return { activity: first, ratio: 0 };
+
+  let picked = first;
+  for (const activity of ACTIVITIES) {
+    if (kcal / activity.kcal >= 1) picked = activity;
+    else break;
+  }
+  return { activity: picked, ratio: kcal / picked.kcal };
+}
+
+/** "서울에서 부산까지 걷기 4.6번". 지표 아래 한 줄로 붙는다. */
+export function formatCaloriesAnalogy(kcal: number): string {
+  const { activity, ratio } = pickActivity(kcal);
+  if (ratio <= 0) return '아직 아무것도 안 먹었어요';
+  if (ratio < 1) return `${activity.name}의 ${trim1(ratio)}배`;
+  return `${activity.name} ${trim1(ratio)}${activity.counter}`;
+}
+
 /** 소수 1자리까지 보여주되, 정수면 소수점을 떼어낸다. */
 function trim1(n: number): string {
   const fixed = n.toFixed(1);

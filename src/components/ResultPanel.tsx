@@ -1,6 +1,7 @@
 import { SCALE_LABELS } from '../domain/bigmac';
 import {
   formatCalories,
+  formatCaloriesAnalogy,
   formatCount,
   formatHeight,
   formatKoreanNumber,
@@ -77,7 +78,12 @@ export function ResultPanel({
 
       <div className={styles.metrics}>
         {/* 지표는 순차로 스며 나오게 한다. reduced-motion은 reset.css가 죽인다. */}
-        <MetricRow label="총 열량" value={formatCalories(result.calories)} delayMs={0} />
+        <MetricRow
+          label="총 열량"
+          value={formatCalories(result.calories)}
+          sub={formatCaloriesAnalogy(result.calories)}
+          delayMs={0}
+        />
         <MetricRow
           label="쌓은 높이"
           value={height.value}

@@ -8,6 +8,7 @@ import {
   findMarket,
   formatMarketPrice,
   formatValuation,
+  groupMarkets,
   minimumWageKRW,
   resolveMarket,
   valuationGap,
@@ -132,5 +133,64 @@ describe('실제 데이터', () => {
     for (const market of data.markets) {
       expect(formatMarketPrice(market)).toMatch(/\d/);
     }
+  });
+});
+
+describe('groupMarkets', () => {
+  const era = (id: string, year: number): Market => ({
+    ...KR,
+    id,
+    name: `${year}년 한국`,
+    era: year,
+  });
+
+  it('나라와 시절을 가른다', () => {
+    const { places, eras } = groupMarkets([KR, era('KR-2010', 2010), US]);
+    expect(places.map((m) => m.id)).toEqual(['KR', 'US']);
+    expect(eras.map((m) => m.id)).toEqual(['KR-2010']);
+  });
+
+  // 2000년보다 2023년이 먼저 궁금하다.
+  it('시절은 최근이 위로 온다', () => {
+    const { eras } = groupMarkets([
+      era('a', 2000),
+      era('b', 2023),
+      era('c', 2010),
+    ]);
+    expect(eras.map((m) => m.era)).toEqual([2023, 2010, 2000]);
+  });
+
+  it('시절이 없으면 빈 배열', () => {
+    expect(groupMarkets([KR, US]).eras).toEqual([]);
+  });
+});
+
+describe('시절 데이터', () => {
+  const data = parsePriceData(rawPrices);
+  const { eras } = groupMarkets(data.markets);
+
+  it('연도별 기준이 실려 있다', () => {
+    expect(eras.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('시절은 전부 원화 기준이라 환율이 1이다', () => {
+    for (const m of eras) expect(m.fxToKRW).toBe(1);
+  });
+
+  // 물가가 올랐다는 것이 이 기능의 요점이다. 과거일수록 빅맥이 싸야 한다.
+  it('옛날일수록 빅맥이 싸다', () => {
+    const base = data.markets.find((m) => m.id === data.defaultMarketId)!;
+    const ordered = [...eras].sort((a, b) => a.era! - b.era!);
+    const prices = [...ordered.map((m) => m.bigMacPrice), base.bigMacPrice];
+    for (let i = 1; i < prices.length; i += 1) {
+      expect(prices[i]!).toBeGreaterThan(prices[i - 1]!);
+    }
+  });
+
+  it('같은 돈이면 옛날에 더 많이 산다', () => {
+    const oldest = [...eras].sort((a, b) => a.era! - b.era!)[0]!;
+    const now = toBigMacs(890_000, bigMacPriceKRW(KR)).count;
+    const then = toBigMacs(890_000, bigMacPriceKRW(oldest)).count;
+    expect(then).toBeGreaterThan(now);
   });
 });

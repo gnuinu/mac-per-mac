@@ -51,6 +51,14 @@ export interface Market {
   uncertain?: boolean;
   /** 기준이나 예외를 적어두는 한 줄. 인도의 마하라자 맥 같은 것. */
   note?: string;
+  /**
+   * 지난 시절이면 그 연도. 없으면 지금 기준이다.
+   *
+   * 옛날 한국은 구조적으로 다른 나라와 똑같다 — 빅맥 값이 다르고 최저시급이
+   * 다를 뿐이다. 그래서 따로 타입을 만들지 않고 Market을 그대로 쓴다.
+   * 목록에서 "나라"와 "시절"로 갈라 보여주는 것만 UI가 한다.
+   */
+  era?: number;
 }
 
 export interface CatalogItem {

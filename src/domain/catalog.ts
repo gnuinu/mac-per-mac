@@ -95,6 +95,7 @@ function parseMarket(raw: unknown, index: number): Market {
     updatedAt: requireString(o.updatedAt, `${path}.updatedAt`),
     source: requireString(o.source, `${path}.source`),
     ...(o.symbolAfter === true ? { symbolAfter: true } : {}),
+    ...(typeof o.era === 'number' && Number.isInteger(o.era) ? { era: o.era } : {}),
     ...(o.uncertain === true ? { uncertain: true } : {}),
     ...(typeof o.note === 'string' && o.note ? { note: o.note } : {}),
   };
