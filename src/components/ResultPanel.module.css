@@ -7,9 +7,11 @@
   flex-shrink: 0;
 }
 
+/* 모바일은 100dvh 안에 전부 들어가야 해서, 블록 사이 간격을 좁힌다.
+   구분선이 이미 단락을 나눠주므로 좁혀도 읽는 데 무리가 없다. */
 @media (max-width: 53.99rem) {
   .wrap {
-    gap: var(--space-3);
+    gap: var(--space-2);
   }
 }
 
