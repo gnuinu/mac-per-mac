@@ -1,0 +1,59 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 0;
+  text-align: center;
+  padding: var(--space-5) var(--space-4);
+}
+
+.icon {
+  width: 3.5rem;
+  color: var(--rule);
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 22rem;
+}
+
+.error .icon {
+  color: var(--accent);
+  opacity: 0.5;
+}
+
+.stage {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.dots::after {
+  content: '';
+  animation: dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: '';
+  }
+  25% {
+    content: '.';
+  }
+  50% {
+    content: '..';
+  }
+  75% {
+    content: '...';
+  }
+}

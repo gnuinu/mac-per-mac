@@ -1,0 +1,37 @@
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.label {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* 점선 리더. 영수증의 항목-금액 사이를 잇는 그 선. */
+.leader {
+  flex: 1;
+  min-width: var(--space-4);
+  border-bottom: 1px dotted var(--rule);
+  transform: translateY(-0.25em);
+}
+
+.value {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.sub {
+  display: block;
+  margin-top: 1px;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--muted);
+}

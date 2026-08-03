@@ -1,0 +1,104 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: var(--space-3);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.subject {
+  font-size: 0.82rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.badges {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.badge {
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-pill);
+  padding: 1px var(--space-2);
+  white-space: nowrap;
+}
+
+.headline {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-size: clamp(2.6rem, 11vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.countUnit {
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.scale {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: calc(var(--space-1) * -1);
+}
+
+/* 영수증 절취선. */
+.rule {
+  border: none;
+  border-top: 1px dashed var(--rule);
+  margin: 0;
+}
+
+.metrics {
+  display: flex;
+  flex-direction: column;
+}
+
+.remainder {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.remainder strong {
+  font-family: var(--font-mono);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.note {
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.source {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
