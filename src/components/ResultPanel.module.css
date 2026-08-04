@@ -13,6 +13,16 @@
   .wrap {
     gap: var(--space-2);
   }
+
+  /* 입력이 접히면 요약 바가 "맥 미니 M4 · 89만원"을 이고 있다. 두 번 쓰지 않는다. */
+  .compact .subject {
+    display: none;
+  }
+
+  .compact .head:empty,
+  .compact .head:has(.subject:only-child) {
+    display: none;
+  }
 }
 
 .head {
@@ -85,15 +95,19 @@
   opacity: 0.75;
 }
 
+/*
+ * 알약이 아니라 왼쪽에 4px 룰 한 줄.
+ * 알약은 반지름 999px이라 격자와 무관했고, 큰 숫자 옆에서 또 하나의 덩어리로
+ * 경쟁해 붕 떠 보였다. 룰은 숫자에 딸린 설명이라는 걸 자리로 말한다.
+ */
 .scale {
   display: inline-flex;
   align-self: flex-start;
   margin-top: var(--space-2);
-  font-size: var(--text-xs);
+  padding-left: var(--space-2);
+  border-left: var(--px) solid var(--accent-line);
+  font-size: var(--text-sm);
   color: var(--accent);
-  background: var(--accent-soft);
-  border-radius: var(--r-pill);
-  padding: var(--space-1) var(--space-3);
 }
 
 /* 영수증 절취선. */
@@ -106,6 +120,7 @@
 .metrics {
   display: flex;
   flex-direction: column;
+  /* 간격은 MetricRow가 제 padding으로 갖는다. 여기서 또 주면 두 번 벌어진다. */
 }
 
 .remainder {

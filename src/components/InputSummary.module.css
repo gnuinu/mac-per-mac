@@ -1,0 +1,54 @@
+/*
+ * 데스크톱에는 나타나지 않는다. App.module.css가 모바일에서만 켠다.
+ * 높이를 52px로 고정하는 이유는 접힌 상태의 세로 예산이 예측 가능해야
+ * 나머지 배분을 계산할 수 있기 때문이다.
+ */
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 52px;
+  padding: 0 var(--space-2) 0 var(--space-4);
+  background: var(--surface-hi);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.glyph {
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+
+.subject {
+  font-size: var(--text-base);
+  font-weight: var(--weight-label);
+  color: var(--ink);
+  /* 이름이 길면 여기서 줄인다. 금액과 버튼은 끝까지 남아야 한다. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.price {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  flex-shrink: 0;
+  /* 이름과 버튼 사이를 벌려 금액을 버튼 쪽에 붙인다. */
+  margin-left: auto;
+}
+
+.change {
+  flex-shrink: 0;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-label);
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: var(--r-sm);
+  transition: background 160ms var(--ease-out);
+}
+
+.change:hover {
+  background: color-mix(in oklab, var(--accent) 16%, transparent);
+}

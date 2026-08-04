@@ -4,6 +4,8 @@ import styles from './AmountInput.module.css';
 interface Props {
   value: number | null;
   onChange: (value: number | null) => void;
+  /** 입력 중에는 부모가 입력 영역을 접지 않도록 알린다. */
+  onFocusChange?: ((focused: boolean) => void) | undefined;
 }
 
 const MAX_DIGITS = 18;
@@ -39,7 +41,7 @@ function caretAfterDigits(text: string, count: number): number {
  * 천 단위 콤마를 자동으로 넣는 금액 입력.
  * 콤마가 삽입/삭제돼도 커서가 튀지 않도록 "커서 앞 숫자 개수"를 기준으로 복원한다.
  */
-export function AmountInput({ value, onChange }: Props) {
+export function AmountInput({ value, onChange, onFocusChange }: Props) {
   const ref = useRef<HTMLInputElement>(null);
   const pendingCaret = useRef<number | null>(null);
 
@@ -75,6 +77,8 @@ export function AmountInput({ value, onChange }: Props) {
     <div className={styles.wrap}>
       <span className={styles.label}>직접 입력</span>
       <input
+        onFocus={() => onFocusChange?.(true)}
+        onBlur={() => onFocusChange?.(false)}
         ref={ref}
         className={`${styles.input} tnum`}
         style={{ fontSize: `calc(var(--amount-size) * ${scale})` }}

@@ -36,11 +36,26 @@
   --shadow-md: 0 0 0 1px var(--hairline), 0 2px 6px -3px rgb(23 23 26 / 0.09),
     0 14px 32px -12px rgb(23 23 26 / 0.14);
 
-  /* ── 반경 ────────────────────────────────────────────────── */
-  --r-sm: 10px;
-  --r-md: 14px;
-  --r-lg: 20px;
+  /* ── 격자 ────────────────────────────────────────────────── */
+  /*
+   * 픽셀 스프라이트 한 칸의 크기. 반경과 점선 리더가 전부 이 배수라서,
+   * 8비트 그림과 나머지 UI가 같은 도면 위에 놓인다. 격자의 흔적이 UI에
+   * 하나도 없으면 그림만 다른 규칙을 쓰는 것처럼 튄다.
+   */
+  --px: 4px;
+
+  /* ── 반경 — --px의 2·3·4배 ──────────────────────────────── */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
   --r-pill: 999px;
+
+  /* 영수증 점선. 한 칸이 픽셀 한 칸과 같은 크기가 된다. */
+  --leader: repeating-linear-gradient(
+    to right,
+    var(--rule) 0 var(--px),
+    transparent var(--px) calc(var(--px) * 2)
+  );
 
   /* ── 타이포 ──────────────────────────────────────────────── */
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo',
@@ -50,11 +65,22 @@
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, 'JetBrains Mono', Menlo,
     Consolas, 'Liberation Mono', monospace;
 
-  --text-xs: 0.7rem;
-  --text-sm: 0.8rem;
-  --text-base: 0.9rem;
-  --text-lg: 1.05rem;
-  --display: clamp(2.7rem, 11vw, 5.5rem);
+  /*
+   * base와 display 사이가 비어 있어서 큰 숫자 말고는 위계 앵커가 없었다.
+   * xl을 신설해 지표 값이 올라앉을 두 번째 앵커로 삼는다.
+   * 굵기도 스케일이다 — 라벨 500 / 값 700 / 설명 400으로 고정하면 크기를 덜 쓴다.
+   */
+  --text-xs: 0.72rem;
+  --text-sm: 0.82rem;
+  --text-base: 0.94rem;
+  --text-lg: 1.18rem;
+  --text-xl: 1.6rem;
+  --text-2xl: 2.4rem;
+  /* 입력을 접어 얻은 세로를 큰 숫자에 돌려준다. */
+  --display: clamp(3.4rem, 14vw, 6rem);
+
+  --weight-label: 500;
+  --weight-value: 700;
 
   /* ── 간격 ────────────────────────────────────────────────── */
   --space-1: 0.25rem;
@@ -73,18 +99,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0d0d10;
-    --surface: #16161a;
-    --surface-hi: #1c1c21;
+    /* paper→surface 명도차가 3.9%뿐이라 카드 경계가 약했다. 8.6%로 벌린다.
+       그림자가 보이지 않는 다크에서 경계는 명도로만 난다. */
+    --paper: #0a0a0d;
+    --surface: #191920;
+    --surface-hi: #24242c;
 
     --ink: #eceae4;
     --ink-2: #a9a7a1;
     --muted: #78766f;
 
-    --rule: #2c2c33;
+    --rule: #34343e;
     --hairline: color-mix(in oklab, #eceae4 11%, transparent);
 
-    --accent: #4cbb99;
+    /* 표면이 올라간 만큼 강조색을 살짝 내려 형광 느낌을 뺀다. #24242c 위 대비 6.4:1. */
+    --accent: #43ae8e;
     --accent-soft: color-mix(in oklab, var(--accent) 13%, transparent);
     --accent-ring: color-mix(in oklab, var(--accent) 30%, transparent);
     --accent-line: color-mix(in oklab, var(--accent) 42%, transparent);

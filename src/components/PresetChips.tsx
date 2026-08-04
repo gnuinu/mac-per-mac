@@ -1,4 +1,5 @@
 import type { CatalogItem } from '../domain/types';
+import { Glyph } from './pixel/Glyph';
 import styles from './PresetChips.module.css';
 
 interface Props {
@@ -19,9 +20,7 @@ export function PresetChips({ items, activeId, onPick }: Props) {
           aria-pressed={item.id === activeId}
           onClick={() => onPick(item)}
         >
-          <span className={styles.emoji} aria-hidden="true">
-            {item.emoji}
-          </span>
+          <Glyph item={item} size={12} className={styles.glyph} />
           {item.name}
         </button>
       ))}

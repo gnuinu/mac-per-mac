@@ -20,6 +20,8 @@ interface Props {
   bigMacPriceKRW: number;
   result: BigMacResult;
   lookup: PriceLookupResult | null;
+  /** 입력이 요약 바로 접힌 상태. 이름·금액을 그쪽이 이미 말하고 있다. */
+  compact?: boolean;
 }
 
 const SOURCE_BADGE: Record<PriceLookupResult['source'], string | null> = {
@@ -34,6 +36,7 @@ export function ResultPanel({
   bigMacPriceKRW,
   result,
   lookup,
+  compact = false,
 }: Props) {
   const height = formatHeight(result.stackHeightCm);
   const work = formatWorkTime(result.workHours);
@@ -41,7 +44,10 @@ export function ResultPanel({
   const uncertain = lookup?.confidence === 'estimated';
 
   return (
-    <section className={styles.wrap} aria-label="환산 결과">
+    <section
+      className={`${styles.wrap} ${compact ? styles.compact : ''}`}
+      aria-label="환산 결과"
+    >
       <div className={styles.head}>
         <p className={styles.subject}>
           <span className={styles.name}>{subject}</span>
