@@ -1,5 +1,6 @@
 import { formatKoreanNumber } from '../domain/format';
 import type { AltUnitCount } from '../domain/units';
+import { Glyph } from './pixel/Glyph';
 import styles from './AltUnits.module.css';
 
 interface Props {
@@ -30,7 +31,8 @@ export function AltUnits({ units, onPick }: Props) {
               title={`${item.name} 기준으로 보기`}
             >
               <span className={styles.name}>
-                <span aria-hidden="true">{item.emoji}</span> {item.name}
+                <Glyph item={item} size={16} className={styles.glyph} />
+                {item.name}
               </span>
               <span className={styles.dots} aria-hidden="true" />
               <span className={`${styles.count} tnum`}>

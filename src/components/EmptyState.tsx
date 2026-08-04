@@ -8,6 +8,7 @@ import {
 import type { BigMacResult, CatalogItem } from '../domain/types';
 import { STAGE_LABELS, type LookupStage } from '../services/priceLookup';
 import { BurgerIcon } from './icons/BurgerIcon';
+import { Glyph } from './pixel/Glyph';
 import styles from './EmptyState.module.css';
 
 /** 아직 아무것도 안 골랐을 때 대신 보여줄 계산 예시. */
@@ -95,7 +96,8 @@ export function EmptyState({ stage, failure, example, onPickExample }: Props) {
       >
         <span className={styles.from}>
           <span className={styles.fromName}>
-            <span aria-hidden="true">{item.emoji}</span> {item.name}
+            <Glyph item={item} size={24} className={styles.glyph} />
+            {item.name}
           </span>
           <span className={`${styles.fromPrice} tnum`}>
             {formatWon(item.priceKRW)}

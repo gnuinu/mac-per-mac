@@ -165,7 +165,9 @@
   flex: 1;
   min-width: var(--space-4);
   align-self: center;
-  border-bottom: 1px dotted var(--rule);
+  /* 픽셀 한 칸(4px)짜리 점선. 영수증 점선과 그림의 격자가 같은 단위가 된다. */
+  height: 1px;
+  background-image: var(--leader);
 }
 
 .count {

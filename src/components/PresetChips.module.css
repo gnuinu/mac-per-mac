@@ -63,7 +63,12 @@
   box-shadow: 0 0 0 1px var(--accent-line);
 }
 
-.emoji {
-  font-size: var(--text-base);
-  line-height: 1;
+/* 픽토그램은 기본 무채색. 강조는 선택된 항목에만. */
+.glyph {
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+
+.chip[aria-pressed='true'] .glyph {
+  color: var(--accent);
 }

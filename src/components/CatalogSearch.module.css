@@ -91,12 +91,6 @@
   background: var(--accent-soft);
 }
 
-.emoji {
-  flex-shrink: 0;
-  font-size: var(--text-lg);
-  line-height: 1;
-}
-
 .name {
   flex: 1;
   min-width: 0;
@@ -123,4 +117,10 @@
 .empty strong {
   color: var(--accent);
   font-weight: 600;
+}
+
+/* 픽토그램은 기본 무채색. 강조는 선택된 항목에만. */
+.glyph {
+  color: var(--ink-2);
+  flex-shrink: 0;
 }

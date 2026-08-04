@@ -2,6 +2,7 @@ import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { searchCatalog } from '../domain/catalog';
 import { formatWon } from '../domain/format';
 import type { CatalogItem } from '../domain/types';
+import { Glyph } from './pixel/Glyph';
 import styles from './CatalogSearch.module.css';
 
 interface Props {
@@ -127,9 +128,7 @@ export function CatalogSearch({ catalog, onPick, onLookup, busy }: Props) {
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => commit(item)}
                 >
-                  <span className={styles.emoji} aria-hidden="true">
-                    {item.emoji}
-                  </span>
+                  <Glyph item={item} size={16} className={styles.glyph} />
                   <span className={styles.name}>{item.name}</span>
                   <span className={`${styles.price} tnum`}>
                     {formatWon(item.priceKRW)}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { toBigMacs } from './domain/bigmac';
 import { popularItems } from './domain/catalog';
 import { formatWon } from './domain/format';
@@ -17,6 +17,7 @@ import { AmountInput } from './components/AmountInput';
 import { AltUnits } from './components/AltUnits';
 import { CatalogSearch } from './components/CatalogSearch';
 import { EmptyState, type Example } from './components/EmptyState';
+import { InputSummary } from './components/InputSummary';
 import { MarketPicker } from './components/MarketPicker';
 import { PresetChips } from './components/PresetChips';
 import { ResultPanel } from './components/ResultPanel';
@@ -141,6 +142,10 @@ export default function App() {
   const { data, origin } = usePrices();
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const restored = useRef(false);
+  /** 접힌 입력을 사용자가 직접 펼쳤는지. 새 결과가 나오면 다시 접힌다. */
+  const [inputOpen, setInputOpen] = useState(false);
+  /** 금액을 치는 중에 입력칸이 사라지면 키보드까지 닫힌다. 포커스 동안은 펼친 채 둔다. */
+  const [amountFocused, setAmountFocused] = useState(false);
 
   const market = resolveMarket(data.markets, state.marketId, data.defaultMarketId);
   const baseMarket = resolveMarket(data.markets, null, data.defaultMarketId);
@@ -230,6 +235,19 @@ export default function App() {
     }
   }
 
+  const summary =
+    state.priceKRW !== null && state.stage === null
+      ? {
+          subject: state.subject || '입력한 금액',
+          priceKRW: state.priceKRW,
+          /* 공유 링크로 들어오면 pickedId가 없다. 이름으로도 찾아 그림을 붙인다. */
+          item: data.catalog.find(
+            (entry) => entry.id === state.pickedId || entry.name === state.subject,
+          ),
+        }
+      : null;
+  const collapsed = summary !== null && !inputOpen && !amountFocused;
+
   const badge =
     state.lookup?.source === 'estimate'
       ? '추정치'
@@ -264,24 +282,49 @@ export default function App() {
       </header>
 
       <div className={styles.body}>
-        <div className={styles.input}>
-          <AmountInput
-            value={state.priceKRW}
-            onChange={(priceKRW) => dispatch({ type: 'amount', priceKRW })}
-          />
-          <CatalogSearch
-            catalog={data.catalog}
-            busy={state.stage !== null}
-            onPick={(item) => dispatch({ type: 'pick', item })}
-            onLookup={runLookup}
-          />
-          <div className={styles.chipsGroup}>
-            <p className={styles.sectionLabel}>바로 눌러보기</p>
-            <PresetChips
-              items={chips}
-              activeId={state.pickedId}
-              onPick={(item) => dispatch({ type: 'pick', item })}
+        {/*
+          결과가 있으면 모바일에서 입력 세 카드를 한 줄로 접는다. 접기/펴기는
+          CSS가 정한다 — 데스크톱은 좌측 열에 자리가 남아 접을 이유가 없고,
+          자바스크립트로 화면 폭을 재면 첫 렌더가 한 박자 늦게 흔들린다.
+        */}
+        <div className={styles.input} data-mode={collapsed ? 'summary' : 'full'}>
+          <div className={styles.summarySlot}>
+            {summary ? (
+              <InputSummary
+                subject={summary.subject}
+                priceKRW={summary.priceKRW}
+                item={summary.item}
+                onExpand={() => setInputOpen(true)}
+              />
+            ) : null}
+          </div>
+
+          <div className={styles.fullForm}>
+            <AmountInput
+              value={state.priceKRW}
+              onChange={(priceKRW) => dispatch({ type: 'amount', priceKRW })}
+              onFocusChange={setAmountFocused}
             />
+            <CatalogSearch
+              catalog={data.catalog}
+              busy={state.stage !== null}
+              onPick={(item) => {
+                dispatch({ type: 'pick', item });
+                setInputOpen(false);
+              }}
+              onLookup={runLookup}
+            />
+            <div className={styles.chipsGroup}>
+              <p className={styles.sectionLabel}>바로 눌러보기</p>
+              <PresetChips
+                items={chips}
+                activeId={state.pickedId}
+                onPick={(item) => {
+                  dispatch({ type: 'pick', item });
+                  setInputOpen(false);
+                }}
+              />
+            </div>
           </div>
         </div>
 
@@ -297,6 +340,7 @@ export default function App() {
                   bigMacPriceKRW={bigMacPriceKRW(market)}
                   result={result}
                   lookup={state.lookup}
+                  compact={collapsed}
                 />
                 <AltUnits
                   units={altUnits}

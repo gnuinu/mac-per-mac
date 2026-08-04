@@ -49,6 +49,9 @@
 }
 
 .name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-size: var(--text-sm);
   color: var(--ink-2);
   flex-shrink: 0;
@@ -65,12 +68,20 @@
   flex: 1;
   min-width: var(--space-4);
   align-self: center;
-  border-bottom: 1px dotted var(--rule);
+  /* 픽셀 한 칸(4px)짜리 점선. 영수증 점선과 그림의 격자가 같은 단위가 된다. */
+  height: 1px;
+  background-image: var(--leader);
 }
 
 .count {
   font-size: var(--text-sm);
   font-weight: 600;
   color: var(--ink);
+  flex-shrink: 0;
+}
+
+/* 픽토그램은 기본 무채색. 강조는 선택된 항목에만. */
+.glyph {
+  color: var(--ink-2);
   flex-shrink: 0;
 }

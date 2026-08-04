@@ -221,3 +221,32 @@
     display: none;
   }
 }
+
+/*
+ * 입력 영역의 두 얼굴.
+ *
+ * 데스크톱은 좌측 열에 자리가 남으므로 늘 펼친 채다. 요약 바는 모바일에서만
+ * 켜지고, 그때 세로 227px이 52px로 줄어 그 차이가 결과 쪽으로 넘어간다.
+ * 접기 여부를 자바스크립트로 화면 폭을 재서 정하면 첫 렌더가 한 박자 늦게
+ * 흔들리므로, 렌더는 양쪽 다 하고 고르는 일만 CSS에 맡긴다.
+ */
+.fullForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.summarySlot {
+  display: none;
+}
+
+@media (max-width: 53.99rem) {
+  .input[data-mode='summary'] .fullForm {
+    display: none;
+  }
+
+  .input[data-mode='summary'] .summarySlot {
+    display: block;
+  }
+}

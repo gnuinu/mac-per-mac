@@ -22,23 +22,27 @@
 
 .label {
   flex-shrink: 0;
-  font-size: var(--text-sm);
-  color: var(--muted);
+  font-size: var(--text-base);
+  font-weight: var(--weight-label);
+  color: var(--ink-2);
 }
 
 /* 점선 리더. 영수증의 항목-금액 사이를 잇는 그 선. */
 .leader {
   flex: 1;
   min-width: var(--space-4);
-  border-bottom: 1px dotted var(--rule);
+  /* 픽셀 한 칸(4px)짜리 점선. 영수증 점선과 그림의 격자가 같은 단위가 된다. */
+  height: 1px;
+  background-image: var(--leader);
   transform: translateY(-0.3em);
 }
 
 .value {
   flex-shrink: 0;
   font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 650;
+  /* 큰 숫자 말고는 위계 앵커가 없었다. 지표 값이 두 번째 앵커가 된다. */
+  font-size: var(--text-xl);
+  font-weight: var(--weight-value);
   letter-spacing: -0.02em;
   text-align: right;
 }
