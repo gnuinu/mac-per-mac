@@ -4,6 +4,7 @@ import { popularItems } from './domain/catalog';
 import { formatWon } from './domain/format';
 import { bigMacPriceKRW, minimumWageKRW, resolveMarket } from './domain/market';
 import type { CatalogItem, Market } from './domain/types';
+import { altUnitCounts } from './domain/units';
 import { usePrices } from './hooks/usePrices';
 import { shareUrl as buildShareUrl, useUrlState } from './hooks/useUrlState';
 import {
@@ -13,7 +14,7 @@ import {
   type PriceLookupResult,
 } from './services/priceLookup';
 import { AmountInput } from './components/AmountInput';
-import { BurgerGrid } from './components/BurgerGrid';
+import { AltUnits } from './components/AltUnits';
 import { CatalogSearch } from './components/CatalogSearch';
 import { EmptyState, type Example } from './components/EmptyState';
 import { MarketPicker } from './components/MarketPicker';
@@ -42,6 +43,7 @@ type Action =
   | { type: 'pick'; item: CatalogItem }
   | { type: 'restore'; subject: string; priceKRW: number }
   | { type: 'market'; marketId: string }
+  | { type: 'reset' }
   | { type: 'lookupStart' }
   | { type: 'lookupStage'; stage: LookupStage }
   | { type: 'lookupDone'; result: PriceLookupResult }
@@ -83,6 +85,11 @@ function reducer(state: State, action: Action): State {
 
     case 'market':
       return { ...state, marketId: action.marketId };
+
+    // 기준까지 되돌린다. "초기화"라는 말의 가장 곧은 뜻이고, 기준만 남기면
+    // 왜 안 지워졌는지 되묻게 된다.
+    case 'reset':
+      return INITIAL;
 
     case 'pick':
       return {
@@ -187,6 +194,14 @@ export default function App() {
     };
   }, [data, market]);
 
+  const altUnits = useMemo(
+    () =>
+      state.priceKRW === null
+        ? []
+        : altUnitCounts(data.catalog, state.priceKRW, state.pickedId),
+    [data.catalog, state.priceKRW, state.pickedId],
+  );
+
   const result = useMemo(() => {
     if (state.priceKRW === null) return null;
     // 나라를 바꾸는 일은 이 두 인자를 바꿔 넣는 일에 지나지 않는다.
@@ -273,14 +288,24 @@ export default function App() {
         <div className={styles.panel}>
           {result && state.priceKRW !== null && state.stage === null ? (
             <>
-              <ResultPanel
-                subject={state.subject}
-                priceKRW={state.priceKRW}
-                bigMacPriceKRW={bigMacPriceKRW(market)}
-                result={result}
-                lookup={state.lookup}
-              />
-              <BurgerGrid count={result.count} />
+              {/* 넘치는 만큼은 여기서만 스크롤한다. 공유 버튼은 밖에 있어서
+                  화면 크기와 상관없이 늘 눈에 남는다. */}
+              <div className={styles.panelScroll}>
+                <ResultPanel
+                  subject={state.subject}
+                  priceKRW={state.priceKRW}
+                  bigMacPriceKRW={bigMacPriceKRW(market)}
+                  result={result}
+                  lookup={state.lookup}
+                />
+                <AltUnits
+                  units={altUnits}
+                  onPick={(id) => {
+                    const item = data.catalog.find((entry) => entry.id === id);
+                    if (item) dispatch({ type: 'pick', item });
+                  }}
+                />
+              </div>
               <ShareBar
                 subject={state.subject}
                 priceKRW={state.priceKRW}
@@ -290,6 +315,7 @@ export default function App() {
                 {...(market.id === data.defaultMarketId
                   ? {}
                   : { marketName: market.name })}
+                onReset={() => dispatch({ type: 'reset' })}
                 shareUrl={buildShareUrl({
                   query: state.subject,
                   priceKRW: state.priceKRW,

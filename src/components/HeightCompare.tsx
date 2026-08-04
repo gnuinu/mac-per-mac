@@ -146,7 +146,10 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
   // 사람은 늘 실제 비율로 그린다. 다만 장면이 빅맥 한 개 크기일 때 사람은 그림판
   // 스무 배 높이가 되고, 에베레스트 옆에서는 1픽셀도 안 된다. 양쪽 다 그리지 않는다.
   const personH = (PERSON_HEIGHT_CM / tallestCm) * tallestH;
-  const showPerson = personH >= PERSON_MIN_H && personH <= MAX_H;
+  // 비유 대상이 사람이면 눈대중용 사람을 또 세우지 않는다. 같은 사람이 둘
+      // 서 있으면 "왜 두 명이지"부터 묻게 된다.
+  const showPerson =
+    landmark.id !== 'person' && personH >= PERSON_MIN_H && personH <= MAX_H;
 
   const placedLandmark = place(sprites.landmark, landmarkH);
   const placedPerson = place(sprites.person, personH);
@@ -158,16 +161,21 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
   const stackUnit = tileH / sprites.burger.rows;
   const tileW = stackUnit * sprites.burger.cols;
 
-  // 왼쪽부터 차곡차곡 놓고, 마지막 위치로 그림판 폭을 정한다.
+  /*
+   * 왼쪽부터 차곡차곡 놓고, 마지막 위치로 그림판 폭을 정한다.
+   * 순서는 빅맥 기둥 → 비유 대상 → 사람이다. 주인공이 맨 앞에 오고, 눈대중
+   * 기준인 사람은 맨 뒤로 빠진다. 범례도 같은 순서라 그림과 글이 나란히 읽힌다.
+   */
   let cursor = SIDE_PAD;
-  const personX = cursor + placedPerson.w / 2;
-  if (showPerson) cursor = personX + placedPerson.w / 2 + GAP_PERSON;
-
   const stackX = cursor + tileW / 2;
   cursor = stackX + tileW / 2 + GAP_GROUP;
 
   const landmarkX = cursor + placedLandmark.w / 2;
-  const viewW = landmarkX + placedLandmark.w / 2 + SIDE_PAD;
+  cursor = landmarkX + placedLandmark.w / 2;
+
+  const personX = cursor + GAP_PERSON + placedPerson.w / 2;
+  const viewW =
+    (showPerson ? personX + placedPerson.w / 2 : cursor) + SIDE_PAD;
 
   return (
     <figure className={styles.wrap}>
@@ -187,10 +195,6 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
           width={viewW}
           height={1}
         />
-
-        {showPerson ? (
-          <Pixels placed={placedPerson} x={personX} animate={!reducedMotion} />
-        ) : null}
 
         <g
           className={`${styles.stack} ${reducedMotion ? '' : styles.grow}`}
@@ -223,6 +227,10 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
         ) : null}
 
         <Pixels placed={placedLandmark} x={landmarkX} animate={!reducedMotion} />
+
+        {showPerson ? (
+          <Pixels placed={placedPerson} x={personX} animate={!reducedMotion} />
+        ) : null}
       </svg>
 
       <figcaption className={styles.legend}>
@@ -233,8 +241,17 @@ export function HeightCompare({ stackCm, comparison, burgerCount }: Props) {
         <span className={styles.item}>
           <em className={`${styles.swatch} ${styles.swatchMuted}`} aria-hidden="true" />
           {landmark.name}
-          {showPerson ? ' · 옆은 사람 키' : ''}
         </span>
+        {/* 사람은 눈대중 기준이라 제 항목을 갖는다. 남의 설명에 덧붙이지 않는다. */}
+        {showPerson ? (
+          <span className={styles.item}>
+            <em
+              className={`${styles.swatch} ${styles.swatchMuted}`}
+              aria-hidden="true"
+            />
+            성인 키
+          </span>
+        ) : null}
         {/* 실제 비율로 그리지 못했으면 그렇다고 밝힌다. */}
         {clamped ? <span className={styles.warn}>그림은 비율 축약</span> : null}
       </figcaption>

@@ -10,6 +10,8 @@ interface Props {
   bigMacPriceKRW: number;
   marketName?: string;
   result: BigMacResult;
+  /** 입력과 기준을 전부 비운다. */
+  onReset: () => void;
   badge?: string;
   shareUrl: string;
 }
@@ -21,6 +23,7 @@ const FEEDBACK_MS = 1600;
 export function ShareBar({
   subject,
   marketName,
+  onReset,
   priceKRW,
   bigMacPriceKRW,
   result,
@@ -87,6 +90,10 @@ export function ShareBar({
         onClick={copyLink}
       >
         {feedback === 'copied' ? '복사했어요' : '링크 복사'}
+      </button>
+      {/* 되돌리기는 눈에 띌 필요가 없다. 공유 두 개가 주인공이다. */}
+      <button type="button" className={styles.reset} onClick={onReset}>
+        초기화
       </button>
       {feedback === 'failed' ? (
         <span className={styles.failed} role="status">

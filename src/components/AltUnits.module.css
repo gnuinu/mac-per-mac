@@ -1,0 +1,76 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  /* 지표와 마찬가지로 줄어들지 않는다. 양보하는 쪽은 늘 여백이다. */
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 넓으면 두 줄로 접는다. 세로로 넉 줄 세우면 공유 버튼까지 밀려나고,
+   한 줄만 보이다 잘리면 고장난 것처럼 읽힌다. */
+@media (min-width: 54rem) {
+  .list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-6);
+  }
+}
+
+/* 지표 행과 같은 짜임 — 라벨 … 점선 … 우측 정렬 값. */
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  margin-inline: calc(-1 * var(--space-2));
+  border-radius: var(--r-sm);
+  text-align: left;
+  transition: background 140ms var(--ease-out);
+}
+
+.row:hover {
+  background: var(--accent-soft);
+}
+
+.name {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row:hover .name {
+  color: var(--ink);
+}
+
+.dots {
+  flex: 1;
+  min-width: var(--space-4);
+  align-self: center;
+  border-bottom: 1px dotted var(--rule);
+}
+
+.count {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  flex-shrink: 0;
+}

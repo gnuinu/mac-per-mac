@@ -6,13 +6,6 @@
   flex-shrink: 0;
 }
 
-/* 모바일에서는 버거 격자보다 위로 올린다. 자세한 사정은 BurgerGrid.module.css에. */
-@media (max-width: 53.99rem) {
-  .wrap {
-    order: 1;
-  }
-}
-
 .button {
   display: inline-flex;
   align-items: center;
@@ -61,4 +54,19 @@
 .failed {
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+/* 채우지도 띄우지도 않는다. 실수로 누르면 아쉬운 동작이라 조용해야 한다. */
+.reset {
+  margin-left: auto;
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  border-radius: var(--r-sm);
+  transition: color 160ms var(--ease-out);
+}
+
+.reset:hover {
+  color: var(--ink-2);
+  text-decoration: underline;
 }
