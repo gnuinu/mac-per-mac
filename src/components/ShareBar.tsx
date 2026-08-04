@@ -8,6 +8,7 @@ interface Props {
   subject: string;
   priceKRW: number;
   bigMacPriceKRW: number;
+  marketName?: string;
   result: BigMacResult;
   badge?: string;
   shareUrl: string;
@@ -19,6 +20,7 @@ const FEEDBACK_MS = 1600;
 
 export function ShareBar({
   subject,
+  marketName,
   priceKRW,
   bigMacPriceKRW,
   result,
@@ -42,6 +44,7 @@ export function ShareBar({
         bigMacPriceKRW,
         result,
         ...(badge ? { badge } : {}),
+        ...(marketName ? { marketName } : {}),
       });
       const blob = await canvasToBlob(canvas);
       const filename = `빅맥계산기-${subject}.png`;

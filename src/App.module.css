@@ -39,7 +39,7 @@
   flex-shrink: 0;
 }
 
-/* 헤더 우측 메타는 알약 안에 넣어 헤더가 붕 떠 보이지 않게 한다. */
+/* 헤더 우측 메타. 알약의 생김새는 MarketPicker가 물려받았다. */
 .meta {
   display: inline-flex;
   align-items: center;
@@ -47,31 +47,8 @@
   font-size: var(--text-xs);
   font-family: var(--font-mono);
   color: var(--muted);
-  background: var(--surface);
-  border-radius: var(--r-pill);
-  padding: var(--space-1) var(--space-3);
-  box-shadow: var(--shadow-sm);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   min-width: 0;
-}
-
-/* 좁은 화면에서는 갱신일까지 넣으면 헤더가 가로로 넘친다. */
-.metaDate {
-  display: none;
-}
-
-@media (min-width: 26rem) {
-  .metaDate {
-    display: inline;
-  }
-}
-
-/* 값 사이를 얇은 세로선으로 끊는다. 점(·)보다 조용하다. */
-.meta > span + span {
-  padding-left: var(--space-2);
-  border-left: 1px solid var(--rule);
 }
 
 .offline {
@@ -160,9 +137,20 @@
     overflow-y: auto;
   }
 
+  /*
+   * 칩은 카드에서 꺼내 맨몸으로 둔다. 카드 안쪽 여백과 "바로 눌러보기" 라벨이
+   * 50px 남짓을 먹는데, 그 자리는 결과 쪽 비교 그림이 쓰는 편이 낫다.
+   * 칩 자체는 이미 알약 모양이라 카드 없이도 눌러보라는 뜻이 읽힌다.
+   */
   .chipsGroup {
-    padding: var(--space-3);
-    gap: var(--space-2);
+    padding: 0;
+    gap: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .chipsGroup .sectionLabel {
+    display: none;
   }
 }
 
@@ -196,4 +184,22 @@
   gap: var(--space-1) var(--space-4);
   flex-wrap: wrap;
   padding-inline: var(--space-1);
+}
+
+/* 브랜드 옆 한 줄 부제. 아주 좁은 화면에서는 이름만 남긴다. */
+.tagline {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+  padding-left: var(--space-2);
+  margin-left: var(--space-1);
+  border-left: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+  .tagline {
+    display: none;
+  }
 }

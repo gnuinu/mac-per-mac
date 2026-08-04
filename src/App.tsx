@@ -2,7 +2,8 @@ import { useEffect, useMemo, useReducer, useRef } from 'react';
 import { toBigMacs } from './domain/bigmac';
 import { popularItems } from './domain/catalog';
 import { formatWon } from './domain/format';
-import type { CatalogItem } from './domain/types';
+import { bigMacPriceKRW, minimumWageKRW, resolveMarket } from './domain/market';
+import type { CatalogItem, Market } from './domain/types';
 import { usePrices } from './hooks/usePrices';
 import { shareUrl as buildShareUrl, useUrlState } from './hooks/useUrlState';
 import {
@@ -14,7 +15,8 @@ import {
 import { AmountInput } from './components/AmountInput';
 import { BurgerGrid } from './components/BurgerGrid';
 import { CatalogSearch } from './components/CatalogSearch';
-import { EmptyState } from './components/EmptyState';
+import { EmptyState, type Example } from './components/EmptyState';
+import { MarketPicker } from './components/MarketPicker';
 import { PresetChips } from './components/PresetChips';
 import { ResultPanel } from './components/ResultPanel';
 import { ShareBar } from './components/ShareBar';
@@ -31,12 +33,15 @@ interface State {
   pickedId: string | null;
   stage: LookupStage | null;
   failure: 'not_found' | 'unpriceable' | null;
+  /** 비교 기준 나라 id. null이면 데이터의 기본 나라. */
+  marketId: string | null;
 }
 
 type Action =
   | { type: 'amount'; priceKRW: number | null }
   | { type: 'pick'; item: CatalogItem }
   | { type: 'restore'; subject: string; priceKRW: number }
+  | { type: 'market'; marketId: string }
   | { type: 'lookupStart' }
   | { type: 'lookupStage'; stage: LookupStage }
   | { type: 'lookupDone'; result: PriceLookupResult }
@@ -51,6 +56,9 @@ const API_BASE_URL: string | null =
     ? null
     : (import.meta.env.VITE_API_BASE_URL ?? '');
 
+/** 빈 화면 시연에 쓸 항목. 크기가 와닿고 이름이 익숙한 쪽으로 골랐다. */
+const EXAMPLE_ID = 'mac-mini';
+
 const INITIAL: State = {
   subject: '',
   priceKRW: null,
@@ -58,20 +66,28 @@ const INITIAL: State = {
   pickedId: null,
   stage: null,
   failure: null,
+  marketId: null,
 };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
+    // 나라는 금액·항목과 다른 축이다. 다른 걸 눌렀다고 기준이 한국으로
+    // 돌아가버리면, 나라를 바꿔놓고 이것저것 눌러보는 흐름이 끊긴다.
     case 'amount':
       return {
         ...INITIAL,
+        marketId: state.marketId,
         subject: '입력한 금액',
         priceKRW: action.priceKRW,
       };
 
+    case 'market':
+      return { ...state, marketId: action.marketId };
+
     case 'pick':
       return {
         ...INITIAL,
+        marketId: state.marketId,
         subject: action.item.name,
         priceKRW: action.item.priceKRW,
         pickedId: action.item.id,
@@ -87,6 +103,7 @@ function reducer(state: State, action: Action): State {
     case 'restore':
       return {
         ...INITIAL,
+        marketId: state.marketId,
         subject: action.subject || '입력한 금액',
         priceKRW: action.priceKRW,
       };
@@ -105,6 +122,7 @@ function reducer(state: State, action: Action): State {
         pickedId: null,
         stage: null,
         failure: null,
+        marketId: state.marketId,
       };
 
     case 'lookupFail':
@@ -117,12 +135,22 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, INITIAL);
   const restored = useRef(false);
 
-  const { initial } = useUrlState({ query: state.subject, priceKRW: state.priceKRW });
+  const market = resolveMarket(data.markets, state.marketId, data.defaultMarketId);
+  const baseMarket = resolveMarket(data.markets, null, data.defaultMarketId);
+
+  const { initial } = useUrlState({
+    query: state.subject,
+    priceKRW: state.priceKRW,
+    // 기본 나라는 링크에 안 붙인다. 한국 링크가 굳이 ?m=KR을 달 이유가 없다.
+    marketId: market.id === data.defaultMarketId ? null : market.id,
+  });
 
   // ?q=&p= 로 들어온 상태를 한 번만 복원한다.
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
+
+    if (initial.marketId) dispatch({ type: 'market', marketId: initial.marketId });
 
     if (initial.priceKRW !== null) {
       dispatch({
@@ -140,14 +168,35 @@ export default function App() {
 
   const chips = useMemo(() => popularItems(data.catalog), [data.catalog]);
 
+  /*
+   * 빈 화면에서 "무엇을 해주는 앱인지"를 말 대신 계산으로 보여준다.
+   * 값을 그때그때 계산하므로 가격이 바뀌거나 나라·시절을 바꾸면 예시도 따라간다 —
+   * 손으로 적어둔 설명이 본문과 어긋나는 일이 없다.
+   */
+  const example = useMemo<Example | null>(() => {
+    const item =
+      data.catalog.find((entry) => entry.id === EXAMPLE_ID) ?? data.catalog[0];
+    if (!item) return null;
+    return {
+      item,
+      result: toBigMacs(item.priceKRW, bigMacPriceKRW(market), {
+        caloriesPerUnit: data.bigMac.caloriesPerUnit,
+        heightCm: data.bigMac.heightCm,
+        minimumWageKRW: minimumWageKRW(market),
+      }),
+    };
+  }, [data, market]);
+
   const result = useMemo(() => {
     if (state.priceKRW === null) return null;
-    return toBigMacs(state.priceKRW, data.bigMac.priceKRW, {
+    // 나라를 바꾸는 일은 이 두 인자를 바꿔 넣는 일에 지나지 않는다.
+    // 열량·높이는 빅맥이라는 물건 자체의 성질이라 나라를 타지 않는다.
+    return toBigMacs(state.priceKRW, bigMacPriceKRW(market), {
       caloriesPerUnit: data.bigMac.caloriesPerUnit,
       heightCm: data.bigMac.heightCm,
-      minimumWageKRW: data.minimumWageKRW,
+      minimumWageKRW: minimumWageKRW(market),
     });
-  }, [state.priceKRW, data]);
+  }, [state.priceKRW, data, market]);
 
   async function runLookup(query: string) {
     dispatch({ type: 'lookupStart' });
@@ -179,14 +228,24 @@ export default function App() {
         <h1 className={styles.brand}>
           <BurgerIcon className={styles.brandMark} />
           빅맥계산기
+          {/* 무엇을 해주는 앱인지 늘 붙어 있게 한다. 빈 화면의 시연은 결과가
+              뜨는 순간 사라지지만, 이 한 줄은 남는다. */}
+          <span className={styles.tagline}>아무 가격이나 빅맥 개수로</span>
         </h1>
-        <p className={styles.meta}>
-          <span>빅맥 {formatWon(data.bigMac.priceKRW)}</span>
-          <span className={styles.metaDate}>{data.bigMac.updatedAt}</span>
+        <div className={styles.meta}>
           {origin === 'fallback' ? (
             <span className={styles.offline}>오프라인</span>
           ) : null}
-        </p>
+          <MarketPicker
+            markets={data.markets}
+            selected={market}
+            base={baseMarket}
+            priceKRW={state.priceKRW}
+            onSelect={(picked: Market) =>
+              dispatch({ type: 'market', marketId: picked.id })
+            }
+          />
+        </div>
       </header>
 
       <div className={styles.body}>
@@ -217,7 +276,7 @@ export default function App() {
               <ResultPanel
                 subject={state.subject}
                 priceKRW={state.priceKRW}
-                bigMacPriceKRW={data.bigMac.priceKRW}
+                bigMacPriceKRW={bigMacPriceKRW(market)}
                 result={result}
                 lookup={state.lookup}
               />
@@ -225,24 +284,33 @@ export default function App() {
               <ShareBar
                 subject={state.subject}
                 priceKRW={state.priceKRW}
-                bigMacPriceKRW={data.bigMac.priceKRW}
+                bigMacPriceKRW={bigMacPriceKRW(market)}
                 result={result}
                 {...(badge ? { badge } : {})}
+                {...(market.id === data.defaultMarketId
+                  ? {}
+                  : { marketName: market.name })}
                 shareUrl={buildShareUrl({
                   query: state.subject,
                   priceKRW: state.priceKRW,
+                  marketId: market.id === data.defaultMarketId ? null : market.id,
                 })}
               />
             </>
           ) : (
-            <EmptyState stage={state.stage} failure={state.failure} />
+            <EmptyState
+              stage={state.stage}
+              failure={state.failure}
+              example={example}
+              onPickExample={(item) => dispatch({ type: 'pick', item })}
+            />
           )}
         </div>
       </div>
 
       <footer className={styles.footer}>
-        <span>출처: {data.bigMac.source}</span>
-        <span>최저시급 {formatWon(data.minimumWageKRW)} 기준</span>
+        <span>출처: {market.source}</span>
+        <span>최저시급 {formatWon(Math.round(minimumWageKRW(market)))} 기준</span>
       </footer>
     </div>
   );

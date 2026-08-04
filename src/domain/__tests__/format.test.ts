@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
-  LANDMARKS,
+  ACTIVITIES,
   formatCalories,
+  formatCaloriesAnalogy,
   formatCount,
   formatHeight,
   formatKoreanNumber,
   formatWon,
   formatWorkTime,
+  LANDMARKS,
+  pickActivity,
   pickLandmark,
 } from '../format';
 
@@ -189,5 +192,48 @@ describe('formatWorkTime', () => {
   it('개월 반올림이 12가 되면 해를 올린다', () => {
     const result = formatWorkTime(8 * 250 * 2.999);
     expect(result.text).toBe('3년');
+  });
+});
+
+describe('열량 비유', () => {
+  it('사다리는 kcal 오름차순이다', () => {
+    for (let i = 1; i < ACTIVITIES.length; i += 1) {
+      expect(ACTIVITIES[i]!.kcal).toBeGreaterThan(ACTIVITIES[i - 1]!.kcal);
+    }
+  });
+
+  // 촘촘하면 무엇을 넣든 "1.1번"만 나와서 사다리가 있으나 마나 해진다.
+  it('이웃끼리 최소 3배는 벌어져 있다', () => {
+    for (let i = 1; i < ACTIVITIES.length; i += 1) {
+      expect(ACTIVITIES[i]!.kcal / ACTIVITIES[i - 1]!.kcal).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it('id가 겹치지 않는다', () => {
+    expect(new Set(ACTIVITIES.map((a) => a.id)).size).toBe(ACTIVITIES.length);
+  });
+
+  it('비율이 1 이상인 것 중 가장 큰 활동을 고른다', () => {
+    expect(pickActivity(2_900).activity.id).toBe('marathon');
+    expect(pickActivity(2_799).activity.id).toBe('namsan');
+  });
+
+  it.each([
+    [0, '아직 아무것도 안 먹었어요'],
+    [-5, '아직 아무것도 안 먹었어요'],
+    [2, '계단 한 층 오르기의 0.4배'],
+    [5, '계단 한 층 오르기 1번'],
+    [460, '남산 오르기 1.5번'],
+    [91_030, '서울에서 부산까지 걷기 4.6번'],
+  ])('%s kcal → %s', (kcal, expected) => {
+    expect(formatCaloriesAnalogy(kcal)).toBe(expected);
+  });
+
+  it('사다리 꼭대기를 넘어도 무너지지 않는다', () => {
+    expect(formatCaloriesAnalogy(1e12)).toContain('지구 한 바퀴');
+  });
+
+  it('NaN이면 빈 상태 문구', () => {
+    expect(formatCaloriesAnalogy(Number.NaN)).toBe('아직 아무것도 안 먹었어요');
   });
 });

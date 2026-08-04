@@ -50,13 +50,50 @@ describe('parsePriceData', () => {
     ['객체가 아님', 'nope'],
     ['bigMac 없음', { minimumWageKRW: 1, catalog: [] }],
     ['catalog가 배열이 아님', { bigMac: {}, minimumWageKRW: 1, catalog: {} }],
+    ['markets 없음', { bigMac: { caloriesPerUnit: 1, heightCm: 1 }, catalog: [] }],
   ])('%s이면 던진다', (_label, bad) => {
     expect(() => parsePriceData(bad)).toThrow(PriceDataError);
   });
 
   it('빅맥 가격이 0이면 던진다', () => {
-    const bad = { ...rawPrices, bigMac: { ...rawPrices.bigMac, priceKRW: 0 } };
+    const [first, ...rest] = rawPrices.markets;
+    const bad = { ...rawPrices, markets: [{ ...first, bigMacPrice: 0 }, ...rest] };
     expect(() => parsePriceData(bad)).toThrow(PriceDataError);
+  });
+
+  it('환율이 0이면 던진다', () => {
+    const [first, ...rest] = rawPrices.markets;
+    const bad = { ...rawPrices, markets: [{ ...first, fxToKRW: 0 }, ...rest] };
+    expect(() => parsePriceData(bad)).toThrow(PriceDataError);
+  });
+
+  it('markets가 비어 있으면 던진다', () => {
+    expect(() => parsePriceData({ ...rawPrices, markets: [] })).toThrow(
+      PriceDataError,
+    );
+  });
+
+  it('markets에 중복 id가 있으면 던진다', () => {
+    const [first] = rawPrices.markets;
+    const bad = { ...rawPrices, markets: [first, { ...first }] };
+    expect(() => parsePriceData(bad)).toThrow(PriceDataError);
+  });
+
+  it('defaultMarket이 markets에 없으면 던진다', () => {
+    expect(() => parsePriceData({ ...rawPrices, defaultMarket: 'ZZ' })).toThrow(
+      PriceDataError,
+    );
+  });
+
+  // 나라 기능을 붙이기 전과 결과가 같아야 한다. 기본 나라(한국)는 환율이 1이라
+  // 파생값이 곧 현지값이고, 이 불변식이 깨지면 기존 화면이 조용히 달라진다.
+  it('bigMac·minimumWageKRW를 기본 나라에서 그대로 파생한다', () => {
+    const data = parsePriceData(rawPrices);
+    const base = data.markets.find((m) => m.id === data.defaultMarketId)!;
+    expect(base.fxToKRW).toBe(1);
+    expect(data.bigMac.priceKRW).toBe(base.bigMacPrice);
+    expect(data.minimumWageKRW).toBe(base.minimumWage);
+    expect(data.bigMac.source).toBe(base.source);
   });
 
   it('알 수 없는 카테고리는 던진다', () => {
