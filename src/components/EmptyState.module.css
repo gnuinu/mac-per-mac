@@ -97,3 +97,95 @@
 .tickOn {
   background: var(--accent);
 }
+
+/* ── 예시 시연 ─────────────────────────────────────────────
+   결과 패널을 그대로 축소한 모양이다. 새 시각 언어를 늘리지 않으려는 것이고,
+   그래야 진짜 결과가 떴을 때 "아까 그거"로 읽힌다. */
+
+.caption {
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--r-md);
+  background: var(--surface-hi);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 200ms var(--ease-spring),
+    box-shadow 180ms var(--ease-out);
+}
+
+.demo:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px var(--accent-line),
+    0 8px 20px -8px rgb(0 0 0 / 0.2);
+}
+
+.demo:active {
+  transform: translateY(0);
+}
+
+.from {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.fromPrice {
+  color: var(--muted);
+}
+
+.arrow {
+  width: 0.75rem;
+  color: var(--rule);
+}
+
+.to {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.toLabel {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* 진짜 결과의 --display보다 한참 작게. 예시가 본문보다 크면 안 된다. */
+.toCount {
+  font-family: var(--font-mono);
+  font-size: clamp(1.6rem, 6vw, 2.1rem);
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.toUnit {
+  font-size: var(--text-sm);
+  color: var(--accent);
+}
+
+.metrics {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* 세로가 빠듯하면 지표 줄부터 접는다. 요점은 "얼마 → 몇 개"다. */
+@media (max-height: 40rem) {
+  .metrics {
+    display: none;
+  }
+}

@@ -185,3 +185,21 @@
   flex-wrap: wrap;
   padding-inline: var(--space-1);
 }
+
+/* 브랜드 옆 한 줄 부제. 아주 좁은 화면에서는 이름만 남긴다. */
+.tagline {
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--muted);
+  padding-left: var(--space-2);
+  margin-left: var(--space-1);
+  border-left: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+@media (max-width: 30rem) {
+  .tagline {
+    display: none;
+  }
+}
